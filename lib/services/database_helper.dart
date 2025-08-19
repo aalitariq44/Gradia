@@ -23,7 +23,47 @@ class DatabaseHelper {
 
     String path = join(await getDatabasesPath(), 'gradia.db');
 
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: 2, // زيادة رقم الإصدار
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // ترقية من الإصدار 1 إلى 2 - تحديث جدول المدارس
+
+      // إنشاء جدول جديد بالهيكلية المطلوبة
+      await db.execute('''
+        CREATE TABLE schools_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name_ar TEXT NOT NULL,
+          name_en TEXT,
+          logo_path TEXT,
+          address TEXT,
+          phone TEXT,
+          principal_name TEXT,
+          school_types TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
+      // نسخ البيانات الموجودة من الجدول القديم إلى الجديد
+      await db.execute('''
+        INSERT INTO schools_new (id, name_ar, address, phone, school_types, created_at, updated_at)
+        SELECT id, name, address, phone, 'ابتدائي', created_at, updated_at
+        FROM schools
+      ''');
+
+      // حذف الجدول القديم
+      await db.execute('DROP TABLE schools');
+
+      // إعادة تسمية الجدول الجديد
+      await db.execute('ALTER TABLE schools_new RENAME TO schools');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -46,12 +86,15 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE schools (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
+        name_ar TEXT NOT NULL,
+        name_en TEXT,
+        logo_path TEXT,
         address TEXT,
         phone TEXT,
-        email TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT
+        principal_name TEXT,
+        school_types TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     ''');
 

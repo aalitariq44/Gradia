@@ -8,7 +8,7 @@ class SchoolService {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'schools',
-      orderBy: 'name ASC',
+      orderBy: 'name_ar ASC',
     );
 
     return List.generate(maps.length, (i) {
@@ -33,11 +33,11 @@ class SchoolService {
   Future<int> insertSchool(School school) async {
     final db = await _databaseHelper.database;
 
-    // التحقق من عدم وجود مدرسة بنفس الاسم
+    // التحقق من عدم وجود مدرسة بنفس الاسم العربي
     final existing = await db.query(
       'schools',
-      where: 'name = ?',
-      whereArgs: [school.name],
+      where: 'name_ar = ?',
+      whereArgs: [school.nameAr],
     );
 
     if (existing.isNotEmpty) {
@@ -50,11 +50,11 @@ class SchoolService {
   Future<int> updateSchool(School school) async {
     final db = await _databaseHelper.database;
 
-    // التحقق من عدم وجود مدرسة أخرى بنفس الاسم
+    // التحقق من عدم وجود مدرسة أخرى بنفس الاسم العربي
     final existing = await db.query(
       'schools',
-      where: 'name = ? AND id != ?',
-      whereArgs: [school.name, school.id],
+      where: 'name_ar = ? AND id != ?',
+      whereArgs: [school.nameAr, school.id],
     );
 
     if (existing.isNotEmpty) {
@@ -92,9 +92,10 @@ class SchoolService {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.query(
       'schools',
-      where: 'name LIKE ? OR address LIKE ? OR phone LIKE ? OR email LIKE ?',
-      whereArgs: ['%$query%', '%$query%', '%$query%', '%$query%'],
-      orderBy: 'name ASC',
+      where:
+          'name_ar LIKE ? OR name_en LIKE ? OR address LIKE ? OR phone LIKE ? OR principal_name LIKE ?',
+      whereArgs: ['%$query%', '%$query%', '%$query%', '%$query%', '%$query%'],
+      orderBy: 'name_ar ASC',
     );
 
     return List.generate(maps.length, (i) {

@@ -14,10 +14,13 @@ class _SchoolsPageState extends State<SchoolsPage> {
   final SchoolService _schoolService = SchoolService();
   List<School> _schools = [];
   bool _isLoading = false;
-  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nameArController = TextEditingController();
+  final TextEditingController _nameEnController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _principalNameController =
+      TextEditingController();
+  List<String> _selectedSchoolTypes = [];
 
   @override
   void initState() {
@@ -43,17 +46,28 @@ class _SchoolsPageState extends State<SchoolsPage> {
   Future<void> _addSchool() async {
     final localizations = AppLocalizations.of(context)!;
 
-    if (_nameController.text.isEmpty) {
-      _showErrorDialog(localizations.pleaseEnterSchoolName);
+    if (_nameArController.text.isEmpty) {
+      _showErrorDialog('يرجى إدخال اسم المدرسة بالعربية');
+      return;
+    }
+
+    if (_selectedSchoolTypes.isEmpty) {
+      _showErrorDialog('يرجى اختيار نوع المدرسة على الأقل');
       return;
     }
 
     try {
       final school = School(
-        name: _nameController.text,
-        address: _addressController.text,
-        phone: _phoneController.text,
-        email: _emailController.text,
+        nameAr: _nameArController.text,
+        nameEn: _nameEnController.text.isEmpty ? null : _nameEnController.text,
+        address: _addressController.text.isEmpty
+            ? null
+            : _addressController.text,
+        phone: _phoneController.text.isEmpty ? null : _phoneController.text,
+        principalName: _principalNameController.text.isEmpty
+            ? null
+            : _principalNameController.text,
+        schoolTypes: _selectedSchoolTypes,
         createdAt: DateTime.now(),
       );
 
@@ -80,10 +94,12 @@ class _SchoolsPageState extends State<SchoolsPage> {
   }
 
   void _clearForm() {
-    _nameController.clear();
+    _nameArController.clear();
+    _nameEnController.clear();
     _addressController.clear();
     _phoneController.clear();
-    _emailController.clear();
+    _principalNameController.clear();
+    _selectedSchoolTypes.clear();
   }
 
   void _showErrorDialog(String message) {
@@ -126,39 +142,71 @@ class _SchoolsPageState extends State<SchoolsPage> {
       builder: (context) => ContentDialog(
         title: Text(localizations.addNewSchool),
         content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('${localizations.schoolName} *'),
-              const SizedBox(height: 8),
-              TextBox(
-                controller: _nameController,
-                placeholder: localizations.enterSchoolName,
-              ),
-              const SizedBox(height: 16),
-              Text(localizations.address),
-              const SizedBox(height: 8),
-              TextBox(
-                controller: _addressController,
-                placeholder: localizations.enterSchoolAddress,
-              ),
-              const SizedBox(height: 16),
-              Text(localizations.phoneNumber),
-              const SizedBox(height: 8),
-              TextBox(
-                controller: _phoneController,
-                placeholder: localizations.enterPhoneNumber,
-              ),
-              const SizedBox(height: 16),
-              Text(localizations.emailAddress),
-              const SizedBox(height: 8),
-              TextBox(
-                controller: _emailController,
-                placeholder: localizations.enterEmail,
-              ),
-            ],
+          width: 500,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('اسم المدرسة (عربي) *'),
+                const SizedBox(height: 8),
+                TextBox(
+                  controller: _nameArController,
+                  placeholder: 'أدخل اسم المدرسة بالعربية',
+                ),
+                const SizedBox(height: 16),
+                Text('اسم المدرسة (إنجليزي)'),
+                const SizedBox(height: 8),
+                TextBox(
+                  controller: _nameEnController,
+                  placeholder: 'أدخل اسم المدرسة بالإنجليزية',
+                ),
+                const SizedBox(height: 16),
+                Text('العنوان'),
+                const SizedBox(height: 8),
+                TextBox(
+                  controller: _addressController,
+                  placeholder: 'أدخل عنوان المدرسة',
+                ),
+                const SizedBox(height: 16),
+                Text('رقم الهاتف'),
+                const SizedBox(height: 8),
+                TextBox(
+                  controller: _phoneController,
+                  placeholder: 'أدخل رقم الهاتف',
+                ),
+                const SizedBox(height: 16),
+                Text('اسم المدير'),
+                const SizedBox(height: 8),
+                TextBox(
+                  controller: _principalNameController,
+                  placeholder: 'أدخل اسم مدير المدرسة',
+                ),
+                const SizedBox(height: 16),
+                Text('أنواع المدرسة *'),
+                const SizedBox(height: 8),
+                ...School.availableSchoolTypes
+                    .map(
+                      (type) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Checkbox(
+                          checked: _selectedSchoolTypes.contains(type),
+                          onChanged: (checked) {
+                            setState(() {
+                              if (checked == true) {
+                                _selectedSchoolTypes.add(type);
+                              } else {
+                                _selectedSchoolTypes.remove(type);
+                              }
+                            });
+                          },
+                          content: Text(type),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -251,7 +299,7 @@ class _SchoolsPageState extends State<SchoolsPage> {
                         ),
                       ),
                       title: Text(
-                        school.name,
+                        school.nameAr,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -260,12 +308,18 @@ class _SchoolsPageState extends State<SchoolsPage> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (school.address.isNotEmpty)
-                            Text('${localizations.address}: ${school.address}'),
-                          if (school.phone.isNotEmpty)
-                            Text('${localizations.phone}: ${school.phone}'),
-                          if (school.email.isNotEmpty)
-                            Text('${localizations.email}: ${school.email}'),
+                          if (school.nameEn != null &&
+                              school.nameEn!.isNotEmpty)
+                            Text('الاسم الإنجليزي: ${school.nameEn}'),
+                          if (school.address != null &&
+                              school.address!.isNotEmpty)
+                            Text('العنوان: ${school.address}'),
+                          if (school.phone != null && school.phone!.isNotEmpty)
+                            Text('الهاتف: ${school.phone}'),
+                          if (school.principalName != null &&
+                              school.principalName!.isNotEmpty)
+                            Text('المدير: ${school.principalName}'),
+                          Text('نوع المدرسة: ${school.schoolTypesDisplay}'),
                         ],
                       ),
                       trailing: Row(
@@ -288,9 +342,7 @@ class _SchoolsPageState extends State<SchoolsPage> {
                                 builder: (context) => ContentDialog(
                                   title: Text(localizations.confirmDelete),
                                   content: Text(
-                                    localizations.areYouSureDeleteSchool(
-                                      school.name,
-                                    ),
+                                    'هل أنت متأكد من حذف مدرسة ${school.nameAr}؟',
                                   ),
                                   actions: [
                                     Button(
@@ -325,10 +377,11 @@ class _SchoolsPageState extends State<SchoolsPage> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _nameArController.dispose();
+    _nameEnController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
-    _emailController.dispose();
+    _principalNameController.dispose();
     super.dispose();
   }
 }

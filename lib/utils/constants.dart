@@ -30,11 +30,10 @@ class StudentStatusConstants {
 // School types
 class SchoolTypesConstants {
   static const String elementary = 'ابتدائي';
-  static const String middle = 'متوسط';
-  static const String high = 'ثانوي';
-  static const String mixed = 'مختلط';
+  static const String middle = 'متوسطة';
+  static const String preparatory = 'إعدادية';
 
-  static List<String> get schoolTypes => [elementary, middle, high, mixed];
+  static List<String> get schoolTypes => [elementary, middle, preparatory];
 }
 
 // Grade levels

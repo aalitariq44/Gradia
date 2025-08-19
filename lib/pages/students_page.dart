@@ -169,7 +169,7 @@ class _StudentsPageState extends State<StudentsPage> {
                       .map(
                         (school) => ComboBoxItem<School>(
                           value: school,
-                          child: Text(school.name),
+                          child: Text(school.nameAr),
                         ),
                       )
                       .toList(),
@@ -266,10 +266,13 @@ class _StudentsPageState extends State<StudentsPage> {
     final localizations = AppLocalizations.of(context)!;
     final school = _schools.firstWhere(
       (s) => s.id == schoolId,
-      orElse: () =>
-          School(name: localizations.undefined, createdAt: DateTime.now()),
+      orElse: () => School(
+        nameAr: localizations.undefined,
+        schoolTypes: ['ابتدائي'],
+        createdAt: DateTime.now(),
+      ),
     );
-    return school.name;
+    return school.nameAr;
   }
 
   @override
