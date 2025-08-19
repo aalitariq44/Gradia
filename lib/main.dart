@@ -1,4 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'generated/app_localizations.dart';
 import 'pages/schools_page.dart';
 import 'pages/students_page.dart';
 
@@ -15,6 +17,20 @@ class MyApp extends StatelessWidget {
       title: 'Gradia - إدارة المدارس الأهلية',
       theme: FluentThemeData.light(),
       darkTheme: FluentThemeData.dark(),
+
+      // Arabic localization support
+      locale: const Locale('ar', 'SA'),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ar', 'SA'), // Arabic
+        Locale('en', 'US'), // English (fallback)
+      ],
+
       home: const MainNavigationPage(),
       debugShowCheckedModeBanner: false,
     );
@@ -31,49 +47,54 @@ class MainNavigationPage extends StatefulWidget {
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _selectedIndex = 0;
 
-  final List<NavigationPaneItem> _items = [
-    PaneItem(
-      icon: const Icon(FluentIcons.education),
-      title: const Text('المدارس'),
-      body: const SchoolsPage(),
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.people),
-      title: const Text('الطلاب'),
-      body: const StudentsPage(),
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.money),
-      title: const Text('الأقساط'),
-      body: const Center(child: Text('صفحة الأقساط - قيد التطوير')),
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.receipt_processing),
-      title: const Text('الرسوم الإضافية'),
-      body: const Center(child: Text('صفحة الرسوم الإضافية - قيد التطوير')),
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return NavigationView(
-      appBar: NavigationAppBar(
-        title: const Text('Gradia - إدارة المدارس الأهلية'),
-        backgroundColor: Colors.transparent,
+    final localizations = AppLocalizations.of(context)!;
+
+    final List<NavigationPaneItem> items = [
+      PaneItem(
+        icon: const Icon(FluentIcons.education),
+        title: Text(localizations.schools),
+        body: const SchoolsPage(),
       ),
-      pane: NavigationPane(
-        selected: _selectedIndex,
-        onChanged: (index) => setState(() => _selectedIndex = index),
-        displayMode: PaneDisplayMode.open,
-        items: _items,
-        footerItems: [
-          PaneItemSeparator(),
-          PaneItem(
-            icon: const Icon(FluentIcons.settings),
-            title: const Text('الإعدادات'),
-            body: const Center(child: Text('صفحة الإعدادات')),
-          ),
-        ],
+      PaneItem(
+        icon: const Icon(FluentIcons.people),
+        title: Text(localizations.students),
+        body: const StudentsPage(),
+      ),
+      PaneItem(
+        icon: const Icon(FluentIcons.money),
+        title: Text(localizations.tuitions),
+        body: Center(child: Text(localizations.tuitionsPageDev)),
+      ),
+      PaneItem(
+        icon: const Icon(FluentIcons.receipt_processing),
+        title: Text(localizations.additionalFees),
+        body: Center(child: Text(localizations.additionalFeesPageDev)),
+      ),
+    ];
+
+    return Directionality(
+      textDirection: TextDirection.rtl, // Force RTL layout
+      child: NavigationView(
+        appBar: NavigationAppBar(
+          title: Text(localizations.appTitle),
+          backgroundColor: Colors.transparent,
+        ),
+        pane: NavigationPane(
+          selected: _selectedIndex,
+          onChanged: (index) => setState(() => _selectedIndex = index),
+          displayMode: PaneDisplayMode.open,
+          items: items,
+          footerItems: [
+            PaneItemSeparator(),
+            PaneItem(
+              icon: const Icon(FluentIcons.settings),
+              title: Text(localizations.settings),
+              body: Center(child: Text(localizations.settingsPage)),
+            ),
+          ],
+        ),
       ),
     );
   }

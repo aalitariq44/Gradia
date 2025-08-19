@@ -1,6 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import '../models/school_model.dart';
 import '../services/school_service.dart';
+import '../generated/app_localizations.dart';
 
 class SchoolsPage extends StatefulWidget {
   const SchoolsPage({Key? key}) : super(key: key);
@@ -31,7 +32,8 @@ class _SchoolsPageState extends State<SchoolsPage> {
       setState(() => _schools = schools);
     } catch (e) {
       if (mounted) {
-        _showErrorDialog('خطأ في تحميل المدارس: $e');
+        final localizations = AppLocalizations.of(context)!;
+        _showErrorDialog('${localizations.errorLoadingSchools}: $e');
       }
     } finally {
       setState(() => _isLoading = false);
@@ -39,8 +41,10 @@ class _SchoolsPageState extends State<SchoolsPage> {
   }
 
   Future<void> _addSchool() async {
+    final localizations = AppLocalizations.of(context)!;
+
     if (_nameController.text.isEmpty) {
-      _showErrorDialog('يرجى إدخال اسم المدرسة');
+      _showErrorDialog(localizations.pleaseEnterSchoolName);
       return;
     }
 
@@ -57,19 +61,21 @@ class _SchoolsPageState extends State<SchoolsPage> {
       _clearForm();
       _loadSchools();
       Navigator.of(context).pop();
-      _showSuccessMessage('تم إضافة المدرسة بنجاح');
+      _showSuccessMessage(localizations.schoolAdded);
     } catch (e) {
-      _showErrorDialog('خطأ في إضافة المدرسة: $e');
+      _showErrorDialog('${localizations.errorAddingSchool}: $e');
     }
   }
 
   Future<void> _deleteSchool(int id) async {
+    final localizations = AppLocalizations.of(context)!;
+
     try {
       await _schoolService.deleteSchool(id);
       _loadSchools();
-      _showSuccessMessage('تم حذف المدرسة بنجاح');
+      _showSuccessMessage(localizations.schoolDeleted);
     } catch (e) {
-      _showErrorDialog('خطأ في حذف المدرسة: $e');
+      _showErrorDialog('${localizations.errorDeletingSchool}: $e');
     }
   }
 
@@ -81,14 +87,16 @@ class _SchoolsPageState extends State<SchoolsPage> {
   }
 
   void _showErrorDialog(String message) {
+    final localizations = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (context) => ContentDialog(
-        title: const Text('خطأ'),
+        title: Text(localizations.error),
         content: Text(message),
         actions: [
           FilledButton(
-            child: const Text('موافق'),
+            child: Text(localizations.ok),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -97,10 +105,12 @@ class _SchoolsPageState extends State<SchoolsPage> {
   }
 
   void _showSuccessMessage(String message) {
+    final localizations = AppLocalizations.of(context)!;
+
     displayInfoBar(
       context,
       builder: (context, close) => InfoBar(
-        title: const Text('نجح'),
+        title: Text(localizations.success),
         content: Text(message),
         severity: InfoBarSeverity.success,
         onClose: close,
@@ -109,55 +119,57 @@ class _SchoolsPageState extends State<SchoolsPage> {
   }
 
   void _showAddSchoolDialog() {
+    final localizations = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (context) => ContentDialog(
-        title: const Text('إضافة مدرسة جديدة'),
+        title: Text(localizations.addNewSchool),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('اسم المدرسة *'),
+              Text('${localizations.schoolName} *'),
               const SizedBox(height: 8),
               TextBox(
                 controller: _nameController,
-                placeholder: 'أدخل اسم المدرسة',
+                placeholder: localizations.enterSchoolName,
               ),
               const SizedBox(height: 16),
-              const Text('العنوان'),
+              Text(localizations.address),
               const SizedBox(height: 8),
               TextBox(
                 controller: _addressController,
-                placeholder: 'أدخل عنوان المدرسة',
+                placeholder: localizations.enterSchoolAddress,
               ),
               const SizedBox(height: 16),
-              const Text('الهاتف'),
+              Text(localizations.phoneNumber),
               const SizedBox(height: 8),
               TextBox(
                 controller: _phoneController,
-                placeholder: 'أدخل رقم الهاتف',
+                placeholder: localizations.enterPhoneNumber,
               ),
               const SizedBox(height: 16),
-              const Text('البريد الإلكتروني'),
+              Text(localizations.emailAddress),
               const SizedBox(height: 8),
               TextBox(
                 controller: _emailController,
-                placeholder: 'أدخل البريد الإلكتروني',
+                placeholder: localizations.enterEmail,
               ),
             ],
           ),
         ),
         actions: [
           Button(
-            child: const Text('إلغاء'),
+            child: Text(localizations.cancel),
             onPressed: () {
               _clearForm();
               Navigator.pop(context);
             },
           ),
-          FilledButton(child: const Text('إضافة'), onPressed: _addSchool),
+          FilledButton(child: Text(localizations.add), onPressed: _addSchool),
         ],
       ),
     );
@@ -165,137 +177,149 @@ class _SchoolsPageState extends State<SchoolsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ScaffoldPage(
-      header: PageHeader(
-        title: const Text('إدارة المدارس'),
-        commandBar: CommandBar(
-          primaryItems: [
-            CommandBarButton(
-              icon: const Icon(FluentIcons.add),
-              label: const Text('إضافة مدرسة'),
-              onPressed: _showAddSchoolDialog,
-            ),
-            CommandBarButton(
-              icon: const Icon(FluentIcons.refresh),
-              label: const Text('تحديث'),
-              onPressed: _loadSchools,
-            ),
-          ],
-        ),
-      ),
-      content: _isLoading
-          ? const Center(child: ProgressRing())
-          : _schools.isEmpty
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    FluentIcons.education,
-                    size: 64,
-                    color: Color(0xFF0078D4),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'لا توجد مدارس مسجلة',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'انقر على "إضافة مدرسة" لبدء إضافة المدارس',
-                    style: TextStyle(fontSize: 14, color: Color(0xFF605E5C)),
-                  ),
-                ],
+    final localizations = AppLocalizations.of(context)!;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: ScaffoldPage(
+        header: PageHeader(
+          title: Text(localizations.schoolManagement),
+          commandBar: CommandBar(
+            primaryItems: [
+              CommandBarButton(
+                icon: const Icon(FluentIcons.add),
+                label: Text(localizations.addSchool),
+                onPressed: _showAddSchoolDialog,
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _schools.length,
-              itemBuilder: (context, index) {
-                final school = _schools[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF0078D4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        FluentIcons.education,
-                        color: Colors.white,
-                      ),
+              CommandBarButton(
+                icon: const Icon(FluentIcons.refresh),
+                label: Text(localizations.refresh),
+                onPressed: _loadSchools,
+              ),
+            ],
+          ),
+        ),
+        content: _isLoading
+            ? const Center(child: ProgressRing())
+            : _schools.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      FluentIcons.education,
+                      size: 64,
+                      color: Color(0xFF0078D4),
                     ),
-                    title: Text(
-                      school.name,
+                    const SizedBox(height: 16),
+                    Text(
+                      localizations.noSchoolsRegistered,
                       style: const TextStyle(
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        fontSize: 16,
                       ),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (school.address.isNotEmpty)
-                          Text('العنوان: ${school.address}'),
-                        if (school.phone.isNotEmpty)
-                          Text('الهاتف: ${school.phone}'),
-                        if (school.email.isNotEmpty)
-                          Text('البريد: ${school.email}'),
-                      ],
+                    const SizedBox(height: 8),
+                    Text(
+                      localizations.clickAddSchoolToStart,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF605E5C),
+                      ),
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(FluentIcons.edit),
-                          onPressed: () {
-                            // TODO: Implement edit functionality
-                          },
+                  ],
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _schools.length,
+                itemBuilder: (context, index) {
+                  final school = _schools[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF0078D4),
+                          shape: BoxShape.circle,
                         ),
-                        IconButton(
-                          icon: Icon(
-                            FluentIcons.delete,
-                            color: Colors.red.normal,
+                        child: const Icon(
+                          FluentIcons.education,
+                          color: Colors.white,
+                        ),
+                      ),
+                      title: Text(
+                        school.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (school.address.isNotEmpty)
+                            Text('${localizations.address}: ${school.address}'),
+                          if (school.phone.isNotEmpty)
+                            Text('${localizations.phone}: ${school.phone}'),
+                          if (school.email.isNotEmpty)
+                            Text('${localizations.email}: ${school.email}'),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(FluentIcons.edit),
+                            onPressed: () {
+                              // TODO: Implement edit functionality
+                            },
                           ),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => ContentDialog(
-                                title: const Text('تأكيد الحذف'),
-                                content: Text(
-                                  'هل أنت متأكد من حذف مدرسة "${school.name}"؟',
-                                ),
-                                actions: [
-                                  Button(
-                                    child: const Text('إلغاء'),
-                                    onPressed: () => Navigator.pop(context),
-                                  ),
-                                  FilledButton(
-                                    style: ButtonStyle(
-                                      backgroundColor: WidgetStateProperty.all(
-                                        Colors.red,
-                                      ),
+                          IconButton(
+                            icon: Icon(
+                              FluentIcons.delete,
+                              color: Colors.red.normal,
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => ContentDialog(
+                                  title: Text(localizations.confirmDelete),
+                                  content: Text(
+                                    localizations.areYouSureDeleteSchool(
+                                      school.name,
                                     ),
-                                    child: const Text('حذف'),
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _deleteSchool(school.id!);
-                                    },
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                                  actions: [
+                                    Button(
+                                      child: Text(localizations.cancel),
+                                      onPressed: () => Navigator.pop(context),
+                                    ),
+                                    FilledButton(
+                                      style: ButtonStyle(
+                                        backgroundColor:
+                                            WidgetStateProperty.all(Colors.red),
+                                      ),
+                                      child: Text(localizations.delete),
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _deleteSchool(school.id!);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
+      ),
     );
   }
 
