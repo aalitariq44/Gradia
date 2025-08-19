@@ -72,6 +72,36 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         title: Text(localizations.additionalFees),
         body: Center(child: Text(localizations.additionalFeesPageDev)),
       ),
+      PaneItem(
+        icon: const Icon(FluentIcons.people),
+        title: const Text('المعلمين'),
+        body: Center(child: const Text('صفحة المعلمين قيد التطوير')),
+      ),
+      PaneItem(
+        icon: const Icon(FluentIcons.people),
+        title: const Text('الموظفين'),
+        body: Center(child: const Text('صفحة الموظفين قيد التطوير')),
+      ),
+      PaneItem(
+        icon: const Icon(FluentIcons.import),
+        title: const Text('الواردات الخارجية'),
+        body: Center(child: const Text('صفحة الواردات الخارجية قيد التطوير')),
+      ),
+      PaneItem(
+        icon: const Icon(FluentIcons.receipt_processing),
+        title: const Text('المصروفات'),
+        body: Center(child: const Text('صفحة المصروفات قيد التطوير')),
+      ),
+      PaneItem(
+        icon: const Icon(FluentIcons.money),
+        title: const Text('الرواتب'),
+        body: Center(child: const Text('صفحة الرواتب قيد التطوير')),
+      ),
+      PaneItem(
+        icon: const Icon(FluentIcons.refresh),
+        title: const Text('النسخ الاحتياطي'),
+        body: Center(child: const Text('صفحة النسخ الاحتياطي قيد التطوير')),
+      ),
     ];
 
     return Directionality(
@@ -92,6 +122,11 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               icon: const Icon(FluentIcons.settings),
               title: Text(localizations.settings),
               body: Center(child: Text(localizations.settingsPage)),
+            ),
+            PaneItem(
+              icon: const Icon(FluentIcons.sign_out),
+              title: const Text('تسجيل الخروج'),
+              body: Center(child: const Text('تسجيل الخروج')),
             ),
           ],
         ),
