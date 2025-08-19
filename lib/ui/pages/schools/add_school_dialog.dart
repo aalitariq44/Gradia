@@ -1,10 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import '../../core/database/models/school_model.dart';
-import '../../ui/themes/app_theme.dart';
-import '../../ui/widgets/custom_button.dart';
-import '../../ui/widgets/custom_textfield.dart';
-import '../../utils/constants.dart';
-import '../../utils/helpers.dart';
+import '../../../core/database/models/school_model.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_textfield.dart';
+import '../../../utils/constants.dart';
+import '../../../utils/helpers.dart';
 
 class AddSchoolDialog extends StatefulWidget {
   const AddSchoolDialog({Key? key}) : super(key: key);
