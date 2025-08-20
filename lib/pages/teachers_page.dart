@@ -203,9 +203,7 @@ class _TeachersPageState extends State<TeachersPage> {
                 _showErrorDialog('خطأ في حذف المعلم: ${e.toString()}');
               }
             },
-            style: ButtonStyle(
-              backgroundColor: ButtonState.all(Colors.red),
-            ),
+            style: ButtonStyle(backgroundColor: ButtonState.all(Colors.red)),
             child: const Text('حذف'),
           ),
         ],
@@ -598,10 +596,7 @@ class _TeachersPageState extends State<TeachersPage> {
                         child: Text(_getSchoolName(teacher.schoolId)),
                       ),
                       // عدد الحصص
-                      Expanded(
-                        flex: 2,
-                        child: Text('${teacher.classHours}'),
-                      ),
+                      Expanded(flex: 2, child: Text('${teacher.classHours}')),
                       // الراتب الشهري
                       Expanded(
                         flex: 2,
@@ -614,10 +609,7 @@ class _TeachersPageState extends State<TeachersPage> {
                         ),
                       ),
                       // رقم الهاتف
-                      Expanded(
-                        flex: 2,
-                        child: Text(teacher.phone ?? '-'),
-                      ),
+                      Expanded(flex: 2, child: Text(teacher.phone ?? '-')),
                       // ملاحظات
                       Expanded(
                         flex: 3,
@@ -692,7 +684,10 @@ class _TeachersPageState extends State<TeachersPage> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Colors.orange.light, Colors.orange.dark],
@@ -723,7 +718,10 @@ class _TeachersPageState extends State<TeachersPage> {
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Colors.green.light, Colors.green.dark],
