@@ -277,10 +277,10 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                       children: [
                         Expanded(
                           child: _buildSummaryCard(
-                            'عدد الدفعات',
-                            _installmentCount.toString(),
-                            Colors.blue,
-                            FluentIcons.number_field,
+                            'القسط الكلي',
+                            '${_currentInstallment.toStringAsFixed(0)} د.ع',
+                            Colors.magenta,
+                            FluentIcons.calculator_addition,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -295,7 +295,7 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildSummaryCard(
-                            'المطلوب',
+                            'المتبقي',
                             '${_remainingAmount.toStringAsFixed(0)} د.ع',
                             _remainingAmount > 0 ? Colors.orange : Colors.green,
                             FluentIcons.warning,
@@ -304,10 +304,10 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildSummaryCard(
-                            'القسط الحالي',
-                            '${_currentInstallment.toStringAsFixed(0)} د.ع',
-                            Colors.magenta,
-                            FluentIcons.calculator_addition,
+                            'عدد الدفعات',
+                            _installmentCount.toString(),
+                            Colors.blue,
+                            FluentIcons.number_field,
                           ),
                         ),
                       ],
