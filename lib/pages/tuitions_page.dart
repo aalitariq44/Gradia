@@ -47,11 +47,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      await Future.wait([
-        _loadInstallments(),
-        _loadStudents(),
-        _loadSchools(),
-      ]);
+      await Future.wait([_loadInstallments(), _loadStudents(), _loadSchools()]);
       _applyFilters();
     } catch (e) {
       _showErrorDialog('خطأ في تحميل البيانات: $e');
@@ -81,20 +77,35 @@ class _TuitionsPageState extends State<TuitionsPage> {
           .where((s) => s.schoolId == _selectedSchoolId)
           .map((s) => s.id!)
           .toList();
-      filtered = filtered.where((i) => studentIds.contains(i.studentId)).toList();
+      filtered = filtered
+          .where((i) => studentIds.contains(i.studentId))
+          .toList();
     }
 
     // تصفية حسب الطالب
     if (_selectedStudentId != null) {
-      filtered = filtered.where((i) => i.studentId == _selectedStudentId).toList();
+      filtered = filtered
+          .where((i) => i.studentId == _selectedStudentId)
+          .toList();
     }
 
     // تصفية حسب نطاق التاريخ
     if (_startDate != null) {
-      filtered = filtered.where((i) => i.paymentDate.isAfter(_startDate!.subtract(const Duration(days: 1)))).toList();
+      filtered = filtered
+          .where(
+            (i) => i.paymentDate.isAfter(
+              _startDate!.subtract(const Duration(days: 1)),
+            ),
+          )
+          .toList();
     }
     if (_endDate != null) {
-      filtered = filtered.where((i) => i.paymentDate.isBefore(_endDate!.add(const Duration(days: 1)))).toList();
+      filtered = filtered
+          .where(
+            (i) =>
+                i.paymentDate.isBefore(_endDate!.add(const Duration(days: 1))),
+          )
+          .toList();
     }
 
     setState(() {
@@ -104,7 +115,10 @@ class _TuitionsPageState extends State<TuitionsPage> {
   }
 
   void _calculateTotals() {
-    _totalAmount = _filteredInstallments.fold(0.0, (sum, item) => sum + item.amount);
+    _totalAmount = _filteredInstallments.fold(
+      0.0,
+      (sum, item) => sum + item.amount,
+    );
     _totalCount = _filteredInstallments.length;
   }
 
@@ -139,7 +153,9 @@ class _TuitionsPageState extends State<TuitionsPage> {
   Future<void> _selectDate(bool isStartDate) async {
     final currentDate = isStartDate ? _startDate : _endDate;
     final TextEditingController dateController = TextEditingController(
-      text: currentDate != null ? DateFormat('yyyy-MM-dd').format(currentDate) : '',
+      text: currentDate != null
+          ? DateFormat('yyyy-MM-dd').format(currentDate)
+          : '',
     );
 
     showDialog(
@@ -186,10 +202,14 @@ class _TuitionsPageState extends State<TuitionsPage> {
                   setState(() {
                     if (isStartDate) {
                       _startDate = picked;
-                      _startDateController.text = DateFormat('yyyy-MM-dd').format(picked);
+                      _startDateController.text = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(picked);
                     } else {
                       _endDate = picked;
-                      _endDateController.text = DateFormat('yyyy-MM-dd').format(picked);
+                      _endDateController.text = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(picked);
                     }
                   });
                   _applyFilters();
@@ -263,10 +283,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.blue.light,
-            Colors.purple.light,
-          ],
+          colors: [Colors.blue.light, Colors.purple.light],
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
         ),
@@ -318,18 +335,12 @@ class _TuitionsPageState extends State<TuitionsPage> {
               children: [
                 const Text(
                   'إدارة الأقساط',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'عرض وإدارة جميع الأقساط المدفوعة في النظام مع إمكانيات البحث والتصفية المتقدمة',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[120],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[120]),
                 ),
               ],
             ),
@@ -379,10 +390,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
         children: [
           const Text(
             'التصفية والبحث',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Row(
@@ -402,10 +410,12 @@ class _TuitionsPageState extends State<TuitionsPage> {
                           value: null,
                           child: Text('جميع المدارس'),
                         ),
-                        ..._schools.map((school) => ComboBoxItem<int?>(
-                              value: school.id,
-                              child: Text(school.nameAr),
-                            )),
+                        ..._schools.map(
+                          (school) => ComboBoxItem<int?>(
+                            value: school.id,
+                            child: Text(school.nameAr),
+                          ),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -436,11 +446,17 @@ class _TuitionsPageState extends State<TuitionsPage> {
                           child: Text('جميع الطلاب'),
                         ),
                         ..._students
-                            .where((student) => _selectedSchoolId == null || student.schoolId == _selectedSchoolId)
-                            .map((student) => ComboBoxItem<int?>(
-                                  value: student.id,
-                                  child: Text(student.name),
-                                )),
+                            .where(
+                              (student) =>
+                                  _selectedSchoolId == null ||
+                                  student.schoolId == _selectedSchoolId,
+                            )
+                            .map(
+                              (student) => ComboBoxItem<int?>(
+                                value: student.id,
+                                child: Text(student.name),
+                              ),
+                            ),
                       ],
                       onChanged: (value) {
                         setState(() => _selectedStudentId = value);
@@ -555,11 +571,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              FluentIcons.money,
-              size: 64,
-              color: Colors.grey[120],
-            ),
+            Icon(FluentIcons.money, size: 64, color: Colors.grey[120]),
             const SizedBox(height: 16),
             Text(
               'لا توجد أقساط مدفوعة',
@@ -572,10 +584,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
             const SizedBox(height: 8),
             Text(
               'لم يتم العثور على أقساط تطابق معايير البحث المحددة',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[100],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[100]),
             ),
           ],
         ),
@@ -685,9 +694,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey[50]),
-                    ),
+                    border: Border(bottom: BorderSide(color: Colors.grey[50])),
                   ),
                   child: Row(
                     children: [
@@ -719,13 +726,12 @@ class _TuitionsPageState extends State<TuitionsPage> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          DateFormat('yyyy-MM-dd').format(installment.paymentDate),
+                          DateFormat(
+                            'yyyy-MM-dd',
+                          ).format(installment.paymentDate),
                         ),
                       ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(installment.paymentTime),
-                      ),
+                      Expanded(flex: 2, child: Text(installment.paymentTime)),
                       Expanded(
                         flex: 3,
                         child: Text(
@@ -763,18 +769,12 @@ class _TuitionsPageState extends State<TuitionsPage> {
             children: [
               const Text(
                 'ملخص الأقساط المعروضة',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 'عدد الأقساط: $_totalCount قسط',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[120],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[120]),
               ),
             ],
           ),

@@ -82,7 +82,9 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
     // تحميل جميع الرسوم الإضافية من جميع الطلاب
     _additionalFees = [];
     for (final student in await _studentService.getAllStudents()) {
-      final studentFees = await _additionalFeeService.getStudentAdditionalFees(student.id!);
+      final studentFees = await _additionalFeeService.getStudentAdditionalFees(
+        student.id!,
+      );
       _additionalFees.addAll(studentFees);
     }
   }
@@ -97,7 +99,10 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
 
   Future<void> _loadFeeTypes() async {
     final usedTypes = await _additionalFeeService.getUsedFeeTypes();
-    _feeTypes = [..._predefinedFeeTypes, ...usedTypes.where((type) => !_predefinedFeeTypes.contains(type))];
+    _feeTypes = [
+      ..._predefinedFeeTypes,
+      ...usedTypes.where((type) => !_predefinedFeeTypes.contains(type)),
+    ];
   }
 
   void _applyFilters() {
@@ -109,12 +114,16 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
           .where((s) => s.schoolId == _selectedSchoolId)
           .map((s) => s.id!)
           .toList();
-      filtered = filtered.where((f) => studentIds.contains(f.studentId)).toList();
+      filtered = filtered
+          .where((f) => studentIds.contains(f.studentId))
+          .toList();
     }
 
     // تصفية حسب الطالب
     if (_selectedStudentId != null) {
-      filtered = filtered.where((f) => f.studentId == _selectedStudentId).toList();
+      filtered = filtered
+          .where((f) => f.studentId == _selectedStudentId)
+          .toList();
     }
 
     // تصفية حسب نوع الرسم
@@ -139,11 +148,11 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
         final schoolName = _getSchoolName(f.studentId).toLowerCase();
         final feeType = f.feeType.toLowerCase();
         final notes = (f.notes ?? '').toLowerCase();
-        
+
         return studentName.contains(searchText) ||
-               schoolName.contains(searchText) ||
-               feeType.contains(searchText) ||
-               notes.contains(searchText);
+            schoolName.contains(searchText) ||
+            feeType.contains(searchText) ||
+            notes.contains(searchText);
       }).toList();
     }
 
@@ -155,9 +164,13 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
 
   void _calculateStatistics() {
     _totalAmount = _filteredFees.fold(0.0, (sum, fee) => sum + fee.amount);
-    _paidAmount = _filteredFees.where((f) => f.paid).fold(0.0, (sum, fee) => sum + fee.amount);
-    _unpaidAmount = _filteredFees.where((f) => !f.paid).fold(0.0, (sum, fee) => sum + fee.amount);
-    
+    _paidAmount = _filteredFees
+        .where((f) => f.paid)
+        .fold(0.0, (sum, fee) => sum + fee.amount);
+    _unpaidAmount = _filteredFees
+        .where((f) => !f.paid)
+        .fold(0.0, (sum, fee) => sum + fee.amount);
+
     _totalCount = _filteredFees.length;
     _paidCount = _filteredFees.where((f) => f.paid).length;
     _unpaidCount = _filteredFees.where((f) => !f.paid).length;
@@ -244,10 +257,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.blue.light,
-            Colors.purple.light,
-          ],
+          colors: [Colors.blue.light, Colors.purple.light],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -280,10 +290,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
           const SizedBox(height: 8),
           const Text(
             'عرض وإدارة جميع الرسوم الإضافية مع إمكانيات البحث والتصفية',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.white),
           ),
           const SizedBox(height: 20),
           Row(
@@ -321,7 +328,12 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, Color backgroundColor, IconData icon) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    Color backgroundColor,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -330,11 +342,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 24,
-            color: Colors.white,
-          ),
+          Icon(icon, size: 24, color: Colors.white),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -385,10 +393,12 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                   value: null,
                   child: Text('جميع المدارس'),
                 ),
-                ..._schools.map((school) => ComboBoxItem<int?>(
-                      value: school.id,
-                      child: Text(school.nameAr),
-                    )),
+                ..._schools.map(
+                  (school) => ComboBoxItem<int?>(
+                    value: school.id,
+                    child: Text(school.nameAr),
+                  ),
+                ),
               ],
               onChanged: (value) {
                 setState(() {
@@ -412,11 +422,17 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                   child: Text('جميع الطلاب'),
                 ),
                 ..._students
-                    .where((student) => _selectedSchoolId == null || student.schoolId == _selectedSchoolId)
-                    .map((student) => ComboBoxItem<int?>(
-                          value: student.id,
-                          child: Text(student.name),
-                        )),
+                    .where(
+                      (student) =>
+                          _selectedSchoolId == null ||
+                          student.schoolId == _selectedSchoolId,
+                    )
+                    .map(
+                      (student) => ComboBoxItem<int?>(
+                        value: student.id,
+                        child: Text(student.name),
+                      ),
+                    ),
               ],
               onChanged: (value) {
                 setState(() => _selectedStudentId = value);
@@ -436,10 +452,10 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                   value: null,
                   child: Text('جميع الأنواع'),
                 ),
-                ..._feeTypes.map((type) => ComboBoxItem<String?>(
-                      value: type,
-                      child: Text(type),
-                    )),
+                ..._feeTypes.map(
+                  (type) =>
+                      ComboBoxItem<String?>(value: type, child: Text(type)),
+                ),
               ],
               onChanged: (value) {
                 setState(() => _selectedFeeType = value);
@@ -455,14 +471,8 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
               placeholder: const Text('حالة الدفع'),
               value: _selectedPaymentStatus,
               items: const [
-                ComboBoxItem<String?>(
-                  value: null,
-                  child: Text('الكل'),
-                ),
-                ComboBoxItem<String?>(
-                  value: 'مدفوع',
-                  child: Text('مدفوع'),
-                ),
+                ComboBoxItem<String?>(value: null, child: Text('الكل')),
+                ComboBoxItem<String?>(value: 'مدفوع', child: Text('مدفوع')),
                 ComboBoxItem<String?>(
                   value: 'غير مدفوع',
                   child: Text('غير مدفوع'),
@@ -561,10 +571,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             const SizedBox(height: 8),
             Text(
               'لم يتم العثور على رسوم تطابق معايير البحث المحددة',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[100],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[100]),
             ),
           ],
         ),
@@ -684,9 +691,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey[50]),
-                    ),
+                    border: Border(bottom: BorderSide(color: Colors.grey[50])),
                   ),
                   child: Row(
                     children: [
@@ -701,32 +706,38 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                         flex: 3,
                         child: Text(_getSchoolName(fee.studentId)),
                       ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(fee.feeType),
-                      ),
+                      Expanded(flex: 2, child: Text(fee.feeType)),
                       Expanded(
                         flex: 2,
                         child: Text(
                           '${NumberFormat('#,###').format(fee.amount)} ريال',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: fee.paid ? Colors.green.dark : Colors.orange.dark,
+                            color: fee.paid
+                                ? Colors.green.dark
+                                : Colors.orange.dark,
                           ),
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: fee.paid ? Colors.green.light : Colors.orange.light,
+                            color: fee.paid
+                                ? Colors.green.light
+                                : Colors.orange.light,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             fee.paid ? 'مدفوع' : 'غير مدفوع',
                             style: TextStyle(
-                              color: fee.paid ? Colors.green.dark : Colors.orange.dark,
+                              color: fee.paid
+                                  ? Colors.green.dark
+                                  : Colors.orange.dark,
                               fontWeight: FontWeight.w600,
                               fontSize: 12,
                             ),
@@ -738,7 +749,9 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                         flex: 2,
                         child: Text(
                           fee.paymentDate != null
-                              ? DateFormat('yyyy-MM-dd').format(fee.paymentDate!)
+                              ? DateFormat(
+                                  'yyyy-MM-dd',
+                                ).format(fee.paymentDate!)
                               : '-',
                         ),
                       ),
@@ -786,10 +799,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
         children: [
           const Text(
             'ملخص الرسوم',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Row(
