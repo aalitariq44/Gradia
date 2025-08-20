@@ -165,7 +165,7 @@ class PrintingService {
               // التاريخ
               if (config.includeDate)
                 pw.Text(
-                  'تاريخ الطباعة: ${_formatDate(DateTime.now())}',
+                  'تاريخ الطباعة: ${_formatDateTime(DateTime.now())}',
                   style: pw.TextStyle(
                     font: _arabicFont,
                     fontSize: config.fontSize - 2,
