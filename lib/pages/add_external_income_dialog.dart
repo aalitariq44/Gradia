@@ -85,10 +85,18 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
     }
 
     if (_selectedSchoolId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('يرجى اختيار المدرسة'),
-          backgroundColor: Colors.red,
+      // Show error dialog if no school selected
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('خطأ'),
+          content: const Text('يرجى اختيار المدرسة'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('موافق'),
+            ),
+          ],
         ),
       );
       return;
@@ -115,23 +123,24 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
       );
 
       await _externalIncomeService.addExternalIncome(income);
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم حفظ الوارد بنجاح'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      if (!mounted) return;
+      // Close dialog and return success
+      Navigator.of(context).pop(true);
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+        // Show error dialog on exception
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('خطأ'),
             content: Text('خطأ في حفظ الوارد: $e'),
-            backgroundColor: Colors.red,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('موافق'),
+              ),
+            ],
           ),
         );
       }

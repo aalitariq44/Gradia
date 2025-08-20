@@ -478,6 +478,20 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
             );
             if (result == true) {
               await _loadData();
+              // Show success dialog on successful addition
+              showDialog(
+                context: context,
+                builder: (context) => ContentDialog(
+                  title: const Text('نجاح'),
+                  content: const Text('تم حفظ الوارد بنجاح'),
+                  actions: [
+                    FilledButton(
+                      child: const Text('موافق'),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              );
             }
           },
           child: const Row(
