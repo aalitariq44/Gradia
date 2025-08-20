@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
 import '../../core/services/expense_service.dart';
 import '../../core/services/school_service.dart';
+import '../../core/services/migration_service.dart';
 import '../../core/database/models/school_model.dart';
 import '../../models/expense_model.dart';
 
@@ -64,6 +65,14 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   Future<void> _loadSchools() async {
     setState(() => _isLoading = true);
     try {
+      // التحقق من وجود مدارس في قاعدة البيانات الجديدة
+      final hasSchools = await MigrationService.hasSchoolsInNewDatabase();
+
+      // إذا لم توجد مدارس، قم بنقلها من قاعدة البيانات القديمة
+      if (!hasSchools) {
+        await MigrationService.migrateSchoolsFromOldToNew();
+      }
+
       final schools = await SchoolService.getAllSchools();
       setState(() {
         _schools = schools;
