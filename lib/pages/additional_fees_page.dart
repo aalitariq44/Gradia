@@ -40,7 +40,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
 
   // أنواع الرسوم المعرفة مسبقاً
   final List<String> _predefinedFeeTypes = [
-     'التسجيل',
+    'التسجيل',
     'كتب',
     'زي مدرسي',
     'نشاطات',
@@ -439,7 +439,10 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                         placeholder: const Text('الكل'),
                         value: _selectedPaymentStatus,
                         items: const [
-                          ComboBoxItem<String?>(value: null, child: Text('الكل')),
+                          ComboBoxItem<String?>(
+                            value: null,
+                            child: Text('الكل'),
+                          ),
                           ComboBoxItem<String?>(
                             value: 'مدفوع',
                             child: Text('مدفوع'),
