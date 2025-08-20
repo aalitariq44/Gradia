@@ -1,5 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/widgets.dart' show TextDirection;
+import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
 import '../models/student_model.dart';
 import '../models/school_model.dart';
@@ -167,7 +167,7 @@ class _StudentsPageState extends State<StudentsPage> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: flutter_widgets.TextDirection.rtl,
       child: ScaffoldPage(
         header: PageHeader(title: const Text('إدارة الطلاب')),
         content: _isLoading
@@ -872,7 +872,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: flutter_widgets.TextDirection.rtl,
       child: ContentDialog(
         title: const Text('إضافة طالب جديد'),
         content: SizedBox(
