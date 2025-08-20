@@ -760,7 +760,8 @@ class _StudentsPageState extends State<StudentsPage> {
       final filters = <String, dynamic>{};
 
       if (_selectedSchoolId != null) {
-        final school = _schools.firstWhere((s) => s.id == _selectedSchoolId);
+        final school = _schools.firstWhere((s) => s.id == _selectedSchoolId,
+            orElse: () => School(nameAr: 'غير معروف', schoolTypes: [], createdAt: DateTime.now()));
         filters['schoolName'] = school.nameAr;
       }
 
@@ -780,12 +781,11 @@ class _StudentsPageState extends State<StudentsPage> {
         filters['gender'] = _selectedGender;
       }
 
-      // طباعة قائمة الطلاب مع نافذة اختيار الأعمدة
-      await _printingService.printStudentsListWithColumnSelection(
+      // طباعة قائمة الطلاب مباشرة
+      await _printingService.printStudentsList(
         students: _filteredStudents,
         schools: _schools,
         filters: filters,
-        context: context,
       );
     } catch (e) {
       _showErrorDialog('خطأ في الطباعة: $e');

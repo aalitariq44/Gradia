@@ -1,7 +1,5 @@
-import 'package:fluent_ui/fluent_ui.dart';
 import '../models/print_config.dart';
 import '../services/printing_service.dart';
-import '../widgets/print_preview_dialog.dart';
 import '../../models/student_model.dart';
 import '../../models/school_model.dart';
 
@@ -60,49 +58,6 @@ class StudentPrintingService {
       'totalFee',
       'startDate',
     ];
-  }
-
-  /// طباعة قائمة الطلاب مع نافذة اختيار الأعمدة
-  Future<void> printStudentsListWithColumnSelection({
-    required List<Student> students,
-    required List<School> schools,
-    Map<String, dynamic>? filters,
-    required BuildContext context,
-  }) async {
-    // تحويل بيانات الطلاب إلى تنسيق قابل للطباعة
-    final printData = _convertStudentsToTableData(students, schools);
-
-    // إنشاء عنوان ديناميكي بناءً على التصفية
-    final title = _generateTitle(filters);
-    final subtitle = _generateSubtitle(students.length, filters);
-
-    // إعدادات الطباعة للطلاب مع جميع الأعمدة المتاحة
-    final config = PrintConfig(
-      title: title,
-      subtitle: subtitle,
-      orientation: 'portrait', // عمودي كما طلب المستخدم
-      fontSize: 9.0,
-      headerFontSize: 16.0,
-      columnHeaders: _getAllColumnHeaders(),
-      columnsToShow: _getDefaultColumns(), // البداية بالأعمدة الافتراضية
-    );
-
-    // عرض نافذة المعاينة مع اختيار الأعمدة
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) => PrintPreviewDialog(
-        title: title,
-        data: printData,
-        initialConfig: config,
-        onPrint: (PrintConfig finalConfig) async {
-          await _printingService.printTable(
-            data: printData,
-            config: finalConfig,
-            previewOptions: const PreviewOptions(showPreview: false),
-          );
-        },
-      ),
-    );
   }
 
   /// طباعة سريعة لقائمة الطلاب
@@ -275,7 +230,8 @@ class StudentPrintingService {
   }
 
   /// تنسيق التاريخ
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
     return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
   }
 
