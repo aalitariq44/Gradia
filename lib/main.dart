@@ -1,5 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/material.dart' hide Colors;
 import 'generated/app_localizations.dart';
 import 'pages/schools_page.dart';
 import 'pages/students_page.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         Locale('ar', 'SA'), // Arabic
         Locale('en', 'US'), // English (fallback)
       ],
+      builder: (context, child) => ScaffoldMessenger(child: child!),
 
       home: const MainNavigationPage(),
       debugShowCheckedModeBanner: false,

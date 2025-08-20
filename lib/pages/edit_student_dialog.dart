@@ -1,8 +1,6 @@
-
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart' hide Colors, FilledButton;
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import '../models/student_model.dart';
 import '../models/school_model.dart';
 import '../services/student_service.dart';
@@ -46,15 +44,20 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.student.name);
-    _nationalIdController =
-        TextEditingController(text: widget.student.nationalIdNumber ?? '');
+    _nationalIdController = TextEditingController(
+      text: widget.student.nationalIdNumber ?? '',
+    );
     _phoneController = TextEditingController(text: widget.student.phone ?? '');
-    _totalFeeController =
-        TextEditingController(text: widget.student.totalFee.toString());
-    _academicYearController =
-        TextEditingController(text: widget.student.academicYear ?? '');
+    _totalFeeController = TextEditingController(
+      text: widget.student.totalFee.toString(),
+    );
+    _academicYearController = TextEditingController(
+      text: widget.student.academicYear ?? '',
+    );
 
-    _selectedSchool = widget.schools.firstWhere((s) => s.id == widget.student.schoolId);
+    _selectedSchool = widget.schools.firstWhere(
+      (s) => s.id == widget.student.schoolId,
+    );
     _selectedGender = widget.student.gender;
     _selectedGrade = widget.student.grade;
     _selectedSection = widget.student.section;
@@ -62,7 +65,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     _selectedStartDate = widget.student.startDate;
   }
 
-    List<String> get _availableGrades {
+  List<String> get _availableGrades {
     if (_selectedSchool == null) return [];
 
     List<String> grades = [];
@@ -110,7 +113,6 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
   ];
   final List<String> _statuses = ['نشط', 'منقطع', 'متخرج', 'منتقل'];
   final List<String> _genders = ['ذكر', 'أنثى'];
-
 
   @override
   void dispose() {
@@ -182,248 +184,248 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     return ContentDialog(
       title: const Text('تعديل بيانات الطالب'),
       content: SizedBox(
-          width: 600,
-          height: 500,
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // القسم الأول - المعلومات الأساسية
-                  const Text(
-                    'المعلومات الأساسية',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
+        width: 600,
+        height: 500,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // القسم الأول - المعلومات الأساسية
+                const Text(
+                  'المعلومات الأساسية',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
 
-                  // الاسم الكامل
-                  InfoLabel(
-                    label: 'الاسم الكامل *',
-                    child: TextFormBox(
-                      controller: _nameController,
-                      placeholder: 'أدخل الاسم الكامل للطالب',
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'الاسم مطلوب';
+                // الاسم الكامل
+                InfoLabel(
+                  label: 'الاسم الكامل *',
+                  child: TextFormBox(
+                    controller: _nameController,
+                    placeholder: 'أدخل الاسم الكامل للطالب',
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'الاسم مطلوب';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    // الرقم الوطني
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'الرقم الوطني',
+                        child: TextFormBox(
+                          controller: _nationalIdController,
+                          placeholder: 'أدخل الرقم الوطني (اختياري)',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // الجنس
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'الجنس *',
+                        child: ComboBox<String>(
+                          value: _selectedGender,
+                          items: _genders
+                              .map(
+                                (gender) => ComboBoxItem<String>(
+                                  value: gender,
+                                  child: Text(gender),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() => _selectedGender = value!);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // القسم الثاني - المعلومات الأكاديمية
+                const Text(
+                  'المعلومات الأكاديمية',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+
+                // المدرسة
+                InfoLabel(
+                  label: 'المدرسة *',
+                  child: ComboBox<School>(
+                    placeholder: const Text('اختر المدرسة'),
+                    value: _selectedSchool,
+                    items: widget.schools
+                        .map(
+                          (school) => ComboBoxItem<School>(
+                            value: school,
+                            child: Text(school.nameAr),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedSchool = value;
+                        // إعادة تعيين الصف عند تغيير المدرسة
+                        if (_availableGrades.isNotEmpty) {
+                          _selectedGrade = _availableGrades.first;
                         }
-                        return null;
-                      },
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    // الصف
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'الصف *',
+                        child: ComboBox<String>(
+                          value: _availableGrades.contains(_selectedGrade)
+                              ? _selectedGrade
+                              : null,
+                          items: _availableGrades
+                              .map(
+                                (grade) => ComboBoxItem<String>(
+                                  value: grade,
+                                  child: Text(grade),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() => _selectedGrade = value!);
+                          },
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(width: 16),
 
-                  Row(
-                    children: [
-                      // الرقم الوطني
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'الرقم الوطني',
-                          child: TextFormBox(
-                            controller: _nationalIdController,
-                            placeholder: 'أدخل الرقم الوطني (اختياري)',
-                          ),
+                    // الشعبة
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'الشعبة *',
+                        child: ComboBox<String>(
+                          value: _selectedSection,
+                          items: _sections
+                              .map(
+                                (section) => ComboBoxItem<String>(
+                                  value: section,
+                                  child: Text(section),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() => _selectedSection = value!);
+                          },
                         ),
                       ),
-                      const SizedBox(width: 16),
-
-                      // الجنس
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'الجنس *',
-                          child: ComboBox<String>(
-                            value: _selectedGender,
-                            items: _genders
-                                .map(
-                                  (gender) => ComboBoxItem<String>(
-                                    value: gender,
-                                    child: Text(gender),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => _selectedGender = value!);
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // القسم الثاني - المعلومات الأكاديمية
-                  const Text(
-                    'المعلومات الأكاديمية',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // المدرسة
-                  InfoLabel(
-                    label: 'المدرسة *',
-                    child: ComboBox<School>(
-                      placeholder: const Text('اختر المدرسة'),
-                      value: _selectedSchool,
-                      items: widget.schools
-                          .map(
-                            (school) => ComboBoxItem<School>(
-                              value: school,
-                              child: Text(school.nameAr),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedSchool = value;
-                          // إعادة تعيين الصف عند تغيير المدرسة
-                          if (_availableGrades.isNotEmpty) {
-                            _selectedGrade = _availableGrades.first;
-                          }
-                        });
-                      },
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
-                  Row(
-                    children: [
-                      // الصف
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'الصف *',
-                          child: ComboBox<String>(
-                            value: _availableGrades.contains(_selectedGrade)
-                                ? _selectedGrade
-                                : null,
-                            items: _availableGrades
-                                .map(
-                                  (grade) => ComboBoxItem<String>(
-                                    value: grade,
-                                    child: Text(grade),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => _selectedGrade = value!);
-                            },
-                          ),
+                Row(
+                  children: [
+                    // الرسوم الدراسية
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'الرسوم الدراسية *',
+                        child: TextFormBox(
+                          controller: _totalFeeController,
+                          placeholder: 'أدخل مبلغ الرسوم',
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'الرسوم مطلوبة';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'يرجى إدخال رقم صحيح';
+                            }
+                            return null;
+                          },
                         ),
                       ),
-                      const SizedBox(width: 16),
-
-                      // الشعبة
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'الشعبة *',
-                          child: ComboBox<String>(
-                            value: _selectedSection,
-                            items: _sections
-                                .map(
-                                  (section) => ComboBoxItem<String>(
-                                    value: section,
-                                    child: Text(section),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => _selectedSection = value!);
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      // الرسوم الدراسية
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'الرسوم الدراسية *',
-                          child: TextFormBox(
-                            controller: _totalFeeController,
-                            placeholder: 'أدخل مبلغ الرسوم',
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'الرسوم مطلوبة';
-                              }
-                              if (double.tryParse(value) == null) {
-                                return 'يرجى إدخال رقم صحيح';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-
-                      // السنة الدراسية
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'السنة الدراسية',
-                          child: TextFormBox(
-                            controller: _academicYearController,
-                            placeholder: 'مثال: 2024-2025',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      // تاريخ المباشرة
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'تاريخ المباشرة *',
-                          child: DatePicker(
-                            selected: _selectedStartDate,
-                            onChanged: (date) {
-                              setState(() => _selectedStartDate = date);
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-
-                      // الحالة
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'الحالة *',
-                          child: ComboBox<String>(
-                            value: _selectedStatus,
-                            items: _statuses
-                                .map(
-                                  (status) => ComboBoxItem<String>(
-                                    value: status,
-                                    child: Text(status),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => _selectedStatus = value!);
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // هاتف الطالب
-                  InfoLabel(
-                    label: 'هاتف الطالب',
-                    child: TextFormBox(
-                      controller: _phoneController,
-                      placeholder: 'أدخل رقم الهاتف (اختياري)',
                     ),
+                    const SizedBox(width: 16),
+
+                    // السنة الدراسية
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'السنة الدراسية',
+                        child: TextFormBox(
+                          controller: _academicYearController,
+                          placeholder: 'مثال: 2024-2025',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    // تاريخ المباشرة
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'تاريخ المباشرة *',
+                        child: DatePicker(
+                          selected: _selectedStartDate,
+                          onChanged: (date) {
+                            setState(() => _selectedStartDate = date);
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // الحالة
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'الحالة *',
+                        child: ComboBox<String>(
+                          value: _selectedStatus,
+                          items: _statuses
+                              .map(
+                                (status) => ComboBoxItem<String>(
+                                  value: status,
+                                  child: Text(status),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() => _selectedStatus = value!);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // هاتف الطالب
+                InfoLabel(
+                  label: 'هاتف الطالب',
+                  child: TextFormBox(
+                    controller: _phoneController,
+                    placeholder: 'أدخل رقم الهاتف (اختياري)',
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        ),
       ),
       actions: [
         Button(
