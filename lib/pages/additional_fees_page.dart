@@ -36,11 +36,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
 
   // الإحصائيات
   double _totalAmount = 0.0;
-  double _paidAmount = 0.0;
-  double _unpaidAmount = 0.0;
   int _totalCount = 0;
-  int _paidCount = 0;
-  int _unpaidCount = 0;
 
   // أنواع الرسوم المعرفة مسبقاً
   final List<String> _predefinedFeeTypes = [
@@ -162,16 +158,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
 
   void _calculateStatistics() {
     _totalAmount = _filteredFees.fold(0.0, (sum, fee) => sum + fee.amount);
-    _paidAmount = _filteredFees
-        .where((f) => f.paid)
-        .fold(0.0, (sum, fee) => sum + fee.amount);
-    _unpaidAmount = _filteredFees
-        .where((f) => !f.paid)
-        .fold(0.0, (sum, fee) => sum + fee.amount);
-
     _totalCount = _filteredFees.length;
-    _paidCount = _filteredFees.where((f) => f.paid).length;
-    _unpaidCount = _filteredFees.where((f) => !f.paid).length;
   }
 
   void _clearFilters() {
@@ -229,22 +216,22 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
           padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Column(
             children: [
-              // القسم العلوي - شريط الإحصائيات
-              _buildStatisticsSection(),
+              // شريط إدارة الرسوم الإضافية
+              _buildManagementBar(),
               const SizedBox(height: 16),
 
-              // قسم الفلاتر والبحث
-              _buildFiltersSection(),
+              // قسم التصفية والبحث
+              _buildFilterSection(),
               const SizedBox(height: 16),
 
-              // أزرار العمليات
+              // أزرار الإجراءات
               _buildActionButtons(),
               const SizedBox(height: 16),
 
               // الجدول الرئيسي
               Expanded(child: _buildFeesTable()),
 
-              // القسم السفلي - ملخص الرسوم
+              // معلومات التلخيص
               _buildSummarySection(),
             ],
           ),
@@ -253,116 +240,53 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
     );
   }
 
-  Widget _buildStatisticsSection() {
+  Widget _buildManagementBar() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.light, Colors.purple.light],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: FluentTheme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'إدارة الرسوم الإضافية',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                'عدد الرسوم المعروضة: $_totalCount',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'عرض وإدارة جميع الرسوم الإضافية مع إمكانيات البحث والتصفية',
-            style: TextStyle(fontSize: 14, color: Colors.white),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'إجمالي المبلغ',
-                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
-                  Colors.white.withOpacity(0.2),
-                  FluentIcons.money,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  'المحصول',
-                  '${NumberFormat('#,###').format(_paidAmount)} د.ع',
-                  Colors.white.withOpacity(0.2),
-                  FluentIcons.accept,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  'المستحق',
-                  '${NumberFormat('#,###').format(_unpaidAmount)} د.ع',
-                  Colors.white.withOpacity(0.2),
-                  FluentIcons.warning,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    String title,
-    String value,
-    Color backgroundColor,
-    IconData icon,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[100]),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: Colors.white),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  'إدارة الرسوم الإضافية',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
+                  'عرض وإدارة جميع الرسوم الإضافية في النظام مع إمكانيات البحث والتصفية المتقدمة',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[120]),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.blue.light,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'إجمالي الرسوم',
+                  style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  value,
+                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
                   style: const TextStyle(
-                    fontSize: 16,
                     color: Colors.white,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -374,7 +298,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
     );
   }
 
-  Widget _buildFiltersSection() {
+  Widget _buildFilterSection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -382,118 +306,179 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[100]),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // قائمة المدارس
-          Expanded(
-            child: ComboBox<int?>(
-              placeholder: const Text('المدرسة'),
-              value: _selectedSchoolId,
-              items: [
-                const ComboBoxItem<int?>(
-                  value: null,
-                  child: Text('جميع المدارس'),
+          const Text(
+            'التصفية والبحث',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+
+          // Filters row with right alignment and fixed widths
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // قائمة المدارس
+                SizedBox(
+                  width: 180,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('المدرسة'),
+                      const SizedBox(height: 8),
+                      ComboBox<int?>(
+                        placeholder: const Text('جميع المدارس'),
+                        value: _selectedSchoolId,
+                        items: [
+                          const ComboBoxItem<int?>(
+                            value: null,
+                            child: Text('جميع المدارس'),
+                          ),
+                          ..._schools.map(
+                            (school) => ComboBoxItem<int?>(
+                              value: school.id,
+                              child: Text(school.nameAr),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSchoolId = value;
+                            _selectedStudentId = null;
+                          });
+                          _applyFilters();
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                ..._schools.map(
-                  (school) => ComboBoxItem<int?>(
-                    value: school.id,
-                    child: Text(school.nameAr),
+                const SizedBox(width: 8),
+                // قائمة الطلاب
+                SizedBox(
+                  width: 180,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('الطالب'),
+                      const SizedBox(height: 8),
+                      ComboBox<int?>(
+                        placeholder: const Text('جميع الطلاب'),
+                        value: _selectedStudentId,
+                        items: [
+                          const ComboBoxItem<int?>(
+                            value: null,
+                            child: Text('جميع الطلاب'),
+                          ),
+                          ..._students
+                              .where(
+                                (student) =>
+                                    _selectedSchoolId == null ||
+                                    student.schoolId == _selectedSchoolId,
+                              )
+                              .map(
+                                (student) => ComboBoxItem<int?>(
+                                  value: student.id,
+                                  child: Text(student.name),
+                                ),
+                              ),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedStudentId = value);
+                          _applyFilters();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // نوع الرسم
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('نوع الرسم'),
+                      const SizedBox(height: 8),
+                      ComboBox<String?>(
+                        placeholder: const Text('جميع الأنواع'),
+                        value: _selectedFeeType,
+                        items: [
+                          const ComboBoxItem<String?>(
+                            value: null,
+                            child: Text('جميع الأنواع'),
+                          ),
+                          ..._feeTypes.map(
+                            (type) => ComboBoxItem<String?>(
+                              value: type,
+                              child: Text(type),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedFeeType = value);
+                          _applyFilters();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // حالة الدفع
+                SizedBox(
+                  width: 120,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('حالة الدفع'),
+                      const SizedBox(height: 8),
+                      ComboBox<String?>(
+                        placeholder: const Text('الكل'),
+                        value: _selectedPaymentStatus,
+                        items: const [
+                          ComboBoxItem<String?>(value: null, child: Text('الكل')),
+                          ComboBoxItem<String?>(
+                            value: 'مدفوع',
+                            child: Text('مدفوع'),
+                          ),
+                          ComboBoxItem<String?>(
+                            value: 'غير مدفوع',
+                            child: Text('غير مدفوع'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedPaymentStatus = value);
+                          _applyFilters();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // حقل البحث
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('ابحث'),
+                      const SizedBox(height: 8),
+                      TextBox(
+                        controller: _searchController,
+                        placeholder: 'اسم الطالب أو نوع الرسم',
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.search),
+                          onPressed: _applyFilters,
+                        ),
+                        onChanged: (value) => _applyFilters(),
+                      ),
+                    ],
                   ),
                 ),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedSchoolId = value;
-                  _selectedStudentId = null;
-                });
-                _applyFilters();
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // قائمة الطلاب
-          Expanded(
-            child: ComboBox<int?>(
-              placeholder: const Text('الطالب'),
-              value: _selectedStudentId,
-              items: [
-                const ComboBoxItem<int?>(
-                  value: null,
-                  child: Text('جميع الطلاب'),
-                ),
-                ..._students
-                    .where(
-                      (student) =>
-                          _selectedSchoolId == null ||
-                          student.schoolId == _selectedSchoolId,
-                    )
-                    .map(
-                      (student) => ComboBoxItem<int?>(
-                        value: student.id,
-                        child: Text(student.name),
-                      ),
-                    ),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedStudentId = value);
-                _applyFilters();
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // قائمة نوع الرسم
-          Expanded(
-            child: ComboBox<String?>(
-              placeholder: const Text('نوع الرسم'),
-              value: _selectedFeeType,
-              items: [
-                const ComboBoxItem<String?>(
-                  value: null,
-                  child: Text('جميع الأنواع'),
-                ),
-                ..._feeTypes.map(
-                  (type) =>
-                      ComboBoxItem<String?>(value: type, child: Text(type)),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedFeeType = value);
-                _applyFilters();
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // قائمة حالة الدفع
-          Expanded(
-            child: ComboBox<String?>(
-              placeholder: const Text('حالة الدفع'),
-              value: _selectedPaymentStatus,
-              items: const [
-                ComboBoxItem<String?>(value: null, child: Text('الكل')),
-                ComboBoxItem<String?>(value: 'مدفوع', child: Text('مدفوع')),
-                ComboBoxItem<String?>(
-                  value: 'غير مدفوع',
-                  child: Text('غير مدفوع'),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() => _selectedPaymentStatus = value);
-                _applyFilters();
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // مربع البحث
-          Expanded(
-            child: TextFormBox(
-              controller: _searchController,
-              placeholder: 'البحث...',
-              prefix: const Icon(FluentIcons.search),
-              onChanged: (value) => _applyFilters(),
             ),
           ),
         ],
@@ -511,7 +496,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             children: [
               Icon(FluentIcons.clear_filter, size: 16),
               SizedBox(width: 8),
-              Text('مسح الفلاتر'),
+              Text('مسح المرشح'),
             ],
           ),
         ),
@@ -537,7 +522,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             children: [
               Icon(FluentIcons.document, size: 16),
               SizedBox(width: 8),
-              Text('تصدير التقرير'),
+              Text('تقرير مالي'),
             ],
           ),
         ),
@@ -555,11 +540,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              FluentIcons.receipt_processing,
-              size: 64,
-              color: Colors.grey[120],
-            ),
+            Icon(FluentIcons.money, size: 64, color: Colors.grey[120]),
             const SizedBox(height: 16),
             Text(
               'لا توجد رسوم إضافية',
@@ -599,6 +580,16 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             ),
             child: const Row(
               children: [
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    'تسلسل',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
                 Expanded(
                   flex: 3,
                   child: Text(
@@ -669,16 +660,6 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                     ),
                   ),
                 ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'تاريخ الإنشاء',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -696,6 +677,8 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                   ),
                   child: Row(
                     children: [
+                      // تسلسل
+                      Expanded(flex: 1, child: Text('${index + 1}')),
                       Expanded(
                         flex: 3,
                         child: Text(
@@ -722,27 +705,13 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                       ),
                       Expanded(
                         flex: 2,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
+                        child: Text(
+                          fee.paid ? 'مدفوع' : 'غير مدفوع',
+                          style: TextStyle(
                             color: fee.paid
-                                ? Colors.green.light
-                                : Colors.orange.light,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            fee.paid ? 'مدفوع' : 'غير مدفوع',
-                            style: TextStyle(
-                              color: fee.paid
-                                  ? Colors.green.dark
-                                  : Colors.orange.dark,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                            textAlign: TextAlign.center,
+                                ? Colors.green.dark
+                                : Colors.orange.dark,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -760,16 +729,6 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                         flex: 3,
                         child: Text(
                           fee.notes ?? '-',
-                          style: TextStyle(
-                            color: Colors.grey[120],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          DateFormat('yyyy-MM-dd').format(fee.createdAt),
                           style: TextStyle(
                             color: Colors.grey[120],
                             fontSize: 13,
@@ -795,65 +754,51 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[100]),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'ملخص الرسوم',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'عدد الرسوم غير المدفوعة: $_unpaidCount',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.orange.dark,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'عدد الرسوم المدفوعة: $_paidCount',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.green.dark,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+              const Text(
+                'ملخص الرسوم المعروضة',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'المبلغ غير المدفوع: ${NumberFormat('#,###').format(_unpaidAmount)} د.ع',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.orange.dark,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'المبلغ المدفوع: ${NumberFormat('#,###').format(_paidAmount)} د.ع',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.green.dark,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 8),
+              Text(
+                'عدد الرسوم: $_totalCount رسم',
+                style: TextStyle(fontSize: 14, color: Colors.grey[120]),
               ),
             ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.light, Colors.green.dark],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'إجمالي المبلغ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
