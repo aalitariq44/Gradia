@@ -114,7 +114,9 @@ class _ExpensesPageState extends State<ExpensesPage> {
       context: context,
       builder: (context) => ContentDialog(
         title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت متأكد من حذف المصروف "${expense.description ?? expense.expenseType}"؟'),
+        content: Text(
+          'هل أنت متأكد من حذف المصروف "${expense.description ?? expense.expenseType}"؟',
+        ),
         actions: [
           Button(
             onPressed: () => Navigator.of(context).pop(false),
@@ -268,7 +270,12 @@ class _ExpensesPageState extends State<ExpensesPage> {
     );
   }
 
-  Widget _buildStatisticCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatisticCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -284,10 +291,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
               Icon(icon, size: 20, color: color),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(fontSize: 12),
-                ),
+                child: Text(title, style: const TextStyle(fontSize: 12)),
               ),
             ],
           ),
@@ -389,9 +393,11 @@ class _ExpensesPageState extends State<ExpensesPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_startDate != null 
-                            ? _displayDateFormatter.format(_startDate!)
-                            : 'اختر التاريخ'),
+                        Text(
+                          _startDate != null
+                              ? _displayDateFormatter.format(_startDate!)
+                              : 'اختر التاريخ',
+                        ),
                         const Icon(FluentIcons.calendar),
                       ],
                     ),
@@ -407,9 +413,11 @@ class _ExpensesPageState extends State<ExpensesPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(_endDate != null 
-                            ? _displayDateFormatter.format(_endDate!)
-                            : 'اختر التاريخ'),
+                        Text(
+                          _endDate != null
+                              ? _displayDateFormatter.format(_endDate!)
+                              : 'اختر التاريخ',
+                        ),
                         const Icon(FluentIcons.calendar),
                       ],
                     ),
@@ -675,7 +683,8 @@ class _ExpensesPageState extends State<ExpensesPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              onPressed: () => _showAddExpenseDialog(expense: expense),
+                              onPressed: () =>
+                                  _showAddExpenseDialog(expense: expense),
                               icon: Icon(FluentIcons.edit, color: Colors.blue),
                             ),
                             IconButton(
@@ -766,7 +775,12 @@ class _ExpensesPageState extends State<ExpensesPage> {
     );
   }
 
-  Widget _buildSummaryItem(String title, String value, IconData icon, Color color) {
+  Widget _buildSummaryItem(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

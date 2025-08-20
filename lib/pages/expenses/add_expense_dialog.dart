@@ -17,22 +17,22 @@ class AddExpenseDialog extends StatefulWidget {
 
 class _AddExpenseDialogState extends State<AddExpenseDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Form controllers
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
-  
+
   // Form values
   int? _selectedSchoolId;
   String? _selectedExpenseType;
   DateTime _selectedDate = DateTime.now();
-  
+
   // Data
   List<SchoolModel> _schools = [];
   bool _isLoading = false;
   bool _isSaving = false;
-  
+
   final DateFormat _displayDateFormatter = DateFormat('dd/MM/yyyy');
 
   @override
@@ -87,7 +87,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
     }
 
     setState(() => _isSaving = true);
-    
+
     try {
       final expense = ExpenseModel(
         id: widget.expense?.id,
@@ -95,11 +95,11 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
         expenseType: _selectedExpenseType!,
         amount: double.parse(_amountController.text),
         expenseDate: _selectedDate,
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
+        description: _descriptionController.text.trim().isEmpty
+            ? null
             : _descriptionController.text.trim(),
-        notes: _notesController.text.trim().isEmpty 
-            ? null 
+        notes: _notesController.text.trim().isEmpty
+            ? null
             : _notesController.text.trim(),
         createdAt: widget.expense?.createdAt,
         updatedAt: widget.expense?.updatedAt,
@@ -161,13 +161,10 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
         children: [
           const Text(
             'المعلومات الأساسية',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           // Description field
           InfoLabel(
             label: 'وصف المصروف *',
@@ -177,9 +174,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
               maxLines: 2,
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               // Amount field
@@ -188,8 +185,8 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 child: InfoLabel(
                   label: 'المبلغ *',
                   child: NumberBox<double>(
-                    value: _amountController.text.isEmpty 
-                        ? null 
+                    value: _amountController.text.isEmpty
+                        ? null
                         : double.tryParse(_amountController.text),
                     onChanged: (value) {
                       _amountController.text = value?.toString() ?? '';
@@ -203,9 +200,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // School selection
               Expanded(
                 flex: 2,
@@ -232,9 +229,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               // Date selection
@@ -254,9 +251,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Expense type selection
               Expanded(
                 flex: 2,
@@ -294,13 +291,10 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
         children: [
           const Text(
             'تفاصيل إضافية',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           InfoLabel(
             label: 'ملاحظات',
             child: TextBox(
@@ -321,7 +315,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Button(
-            onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
+            onPressed: _isSaving
+                ? null
+                : () => Navigator.of(context).pop(false),
             child: const Text('إلغاء'),
           ),
           const SizedBox(width: 8),
@@ -343,7 +339,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                       Text('جاري الحفظ...'),
                     ],
                   )
-                : Text(widget.expense == null ? 'حفظ المصروف' : 'تحديث المصروف'),
+                : Text(
+                    widget.expense == null ? 'حفظ المصروف' : 'تحديث المصروف',
+                  ),
           ),
         ],
       ),
@@ -367,16 +365,10 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
           ),
           child: Row(
             children: [
-              const Icon(
-                FluentIcons.money,
-                color: Colors.white,
-                size: 24,
-              ),
+              const Icon(FluentIcons.money, color: Colors.white, size: 24),
               const SizedBox(width: 12),
               Text(
-                widget.expense == null 
-                    ? 'إضافة مصروف جديد'
-                    : 'تعديل المصروف',
+                widget.expense == null ? 'إضافة مصروف جديد' : 'تعديل المصروف',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -396,17 +388,12 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                  ),
+                  decoration: BoxDecoration(color: Colors.red.withOpacity(0.1)),
                   child: Text(
                     widget.expense == null
                         ? 'يرجى ملء المعلومات المطلوبة لإضافة مصروف جديد. الحقول المحددة بـ * إجبارية.'
                         : 'يرجى تعديل المعلومات المطلوبة. الحقول المحددة بـ * إجبارية.',
-                    style: TextStyle(
-                      color: Colors.red.darker,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.red.darker, fontSize: 14),
                   ),
                 ),
                 _buildBasicInfoSection(),

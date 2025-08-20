@@ -8,7 +8,7 @@ class ExpenseModel {
   final String? notes;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  
+
   // Navigation properties
   final String? schoolName;
 
@@ -35,10 +35,10 @@ class ExpenseModel {
       expenseDate: DateTime.parse(map['expense_date'] as String),
       description: map['description'] as String?,
       notes: map['notes'] as String?,
-      createdAt: map['created_at'] != null 
+      createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'] as String)
           : null,
-      updatedAt: map['updated_at'] != null 
+      updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'] as String)
           : null,
       schoolName: map['school_name'] as String?,
@@ -106,8 +106,8 @@ class ExpenseModel {
   @override
   String toString() {
     return 'ExpenseModel(id: $id, schoolId: $schoolId, expenseType: $expenseType, '
-           'amount: $amount, expenseDate: $expenseDate, description: $description, '
-           'notes: $notes, schoolName: $schoolName)';
+        'amount: $amount, expenseDate: $expenseDate, description: $description, '
+        'notes: $notes, schoolName: $schoolName)';
   }
 
   @override

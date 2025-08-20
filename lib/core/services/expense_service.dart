@@ -62,7 +62,7 @@ class ExpenseService {
       LEFT JOIN schools s ON e.school_id = s.id
       WHERE e.expense_date BETWEEN ? AND ?
     ''';
-    
+
     List<dynamic> params = [
       startDate.toIso8601String().split('T')[0],
       endDate.toIso8601String().split('T')[0],
@@ -80,7 +80,9 @@ class ExpenseService {
   }
 
   // Get expenses by type
-  static Future<List<ExpenseModel>> getExpensesByType(String expenseType) async {
+  static Future<List<ExpenseModel>> getExpensesByType(
+    String expenseType,
+  ) async {
     final db = await DbManager.database;
     final result = await db.rawQuery(
       '''
@@ -106,7 +108,7 @@ class ExpenseService {
     double? maxAmount,
   }) async {
     final db = await DbManager.database;
-    
+
     String whereClause = 'WHERE 1=1';
     List<dynamic> params = [];
 
@@ -150,7 +152,8 @@ class ExpenseService {
       params.add(maxAmount);
     }
 
-    final query = '''
+    final query =
+        '''
       SELECT e.*, s.name_ar as school_name
       FROM expenses e
       LEFT JOIN schools s ON e.school_id = s.id
@@ -182,11 +185,7 @@ class ExpenseService {
   // Delete expense
   static Future<int> deleteExpense(int id) async {
     final db = await DbManager.database;
-    return await db.delete(
-      'expenses',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
   }
 
   // Delete all expenses for a school
@@ -206,7 +205,7 @@ class ExpenseService {
     DateTime? endDate,
   }) async {
     final db = await DbManager.database;
-    
+
     String whereClause = 'WHERE 1=1';
     List<dynamic> params = [];
 
@@ -241,7 +240,7 @@ class ExpenseService {
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month, 1);
     final monthEnd = DateTime(now.year, now.month + 1, 0);
-    
+
     String monthlyWhereClause = 'WHERE expense_date >= ? AND expense_date <= ?';
     List<dynamic> monthlyParams = [
       monthStart.toIso8601String().split('T')[0],
@@ -262,7 +261,7 @@ class ExpenseService {
     // Get yearly amount (current year)
     final yearStart = DateTime(now.year, 1, 1);
     final yearEnd = DateTime(now.year, 12, 31);
-    
+
     String yearlyWhereClause = 'WHERE expense_date >= ? AND expense_date <= ?';
     List<dynamic> yearlyParams = [
       yearStart.toIso8601String().split('T')[0],
@@ -310,7 +309,7 @@ class ExpenseService {
     int? year,
   }) async {
     final db = await DbManager.database;
-    
+
     final targetYear = year ?? DateTime.now().year;
     String whereClause = "WHERE strftime('%Y', expense_date) = ?";
     List<dynamic> params = [targetYear.toString()];
@@ -343,7 +342,7 @@ class ExpenseService {
     DateTime? endDate,
   }) async {
     final db = await DbManager.database;
-    
+
     String whereClause = 'WHERE 1=1';
     List<dynamic> params = [];
 
@@ -362,14 +361,17 @@ class ExpenseService {
       params.add(endDate.toIso8601String().split('T')[0]);
     }
 
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
       SELECT e.*, s.name_ar as school_name
       FROM expenses e
       LEFT JOIN schools s ON e.school_id = s.id
       $whereClause
       ORDER BY e.amount DESC
       LIMIT ?
-    ''', [...params, limit]);
+    ''',
+      [...params, limit],
+    );
 
     return result.map((map) => ExpenseModel.fromMap(map)).toList();
   }
@@ -377,18 +379,14 @@ class ExpenseService {
   // Check if expense exists
   static Future<bool> expenseExists(int id) async {
     final db = await DbManager.database;
-    final result = await db.query(
-      'expenses',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final result = await db.query('expenses', where: 'id = ?', whereArgs: [id]);
     return result.isNotEmpty;
   }
 
   // Get total count of expenses
   static Future<int> getTotalExpensesCount({int? schoolId}) async {
     final db = await DbManager.database;
-    
+
     String whereClause = '';
     List<dynamic> params = [];
 
