@@ -33,6 +33,9 @@ class _TuitionsPageState extends State<TuitionsPage> {
   DateTime? _endDate;
   final TextEditingController _startDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
+  // Controller and query for search field
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   // الإحصائيات
   double _totalAmount = 0.0;
@@ -107,6 +110,15 @@ class _TuitionsPageState extends State<TuitionsPage> {
           )
           .toList();
     }
+    // تصفية حسب البحث (اسم الطالب أو رقم الوصل)
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((i) {
+        final studentName = _getStudentName(i.studentId);
+        final idString = i.id?.toString() ?? '';
+        return studentName.contains(_searchQuery) ||
+            idString.contains(_searchQuery);
+      }).toList();
+    }
 
     setState(() {
       _filteredInstallments = filtered;
@@ -130,6 +142,8 @@ class _TuitionsPageState extends State<TuitionsPage> {
       _endDate = null;
       _startDateController.clear();
       _endDateController.clear();
+      _searchController.clear();
+      _searchQuery = '';
     });
     _applyFilters();
   }
@@ -322,7 +336,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${NumberFormat('#,###').format(_totalAmount)} ريال',
+                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -353,6 +367,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
+
           // Filters row with right alignment and fixed widths
           Align(
             alignment: Alignment.centerRight,
@@ -472,6 +487,32 @@ class _TuitionsPageState extends State<TuitionsPage> {
                           icon: const Icon(FluentIcons.calendar),
                           onPressed: () => _selectDate(false),
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // حقل البحث: اسم الطالب أو رقم الوصل
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('ابحث'),
+                      const SizedBox(height: 8),
+                      TextBox(
+                        controller: _searchController,
+                        placeholder: 'اسم الطالب أو رقم الوصل',
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.search),
+                          onPressed: _applyFilters,
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                          _applyFilters();
+                        },
                       ),
                     ],
                   ),
@@ -683,7 +724,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${NumberFormat('#,###').format(installment.amount)} ريال',
+                          '${NumberFormat('#,###').format(installment.amount)} د.ع',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.green.dark,
@@ -764,7 +805,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${NumberFormat('#,###').format(_totalAmount)} ريال',
+                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -783,6 +824,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
   void dispose() {
     _startDateController.dispose();
     _endDateController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 }
