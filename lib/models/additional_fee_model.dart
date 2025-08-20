@@ -45,7 +45,7 @@ class AdditionalFee {
       id: map['id'],
       studentId: map['student_id'],
       feeType: map['fee_type'],
-      amount: (map['amount'] as num).toDouble(),
+      amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
       paid: map['paid'] == 1,
       paymentDate: map['payment_date'] != null
           ? DateTime.parse(map['payment_date'])

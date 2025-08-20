@@ -100,7 +100,7 @@ class AdditionalFeeService {
       [studentId],
     );
 
-    return (result.first['total'] as double?) ?? 0.0;
+    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
   /// حساب إجمالي المبلغ المدفوع من الرسوم الإضافية
@@ -111,7 +111,7 @@ class AdditionalFeeService {
       [studentId],
     );
 
-    return (result.first['total'] as double?) ?? 0.0;
+    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
   /// حساب إجمالي المبلغ غير المدفوع من الرسوم الإضافية
@@ -122,7 +122,7 @@ class AdditionalFeeService {
       [studentId],
     );
 
-    return (result.first['total'] as double?) ?? 0.0;
+    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
   /// عدد الرسوم الإضافية للطالب
