@@ -595,22 +595,14 @@ class _StudentsPageState extends State<StudentsPage> {
                         Expanded(flex: 2, child: Text(student.phone ?? '-')),
                         Expanded(
                           flex: 2,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(student.status),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              student.status,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
+                          child: Center(
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(student.status),
+                                shape: BoxShape.circle,
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
                         ),
