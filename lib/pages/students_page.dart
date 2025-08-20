@@ -200,156 +200,141 @@ class _StudentsPageState extends State<StudentsPage> {
         color: FluentTheme.of(context).micaBackgroundColor,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              // المدرسة
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('المدرسة'),
-                    const SizedBox(height: 4),
-                    ComboBox<int>(
-                      placeholder: const Text('جميع المدارس'),
-                      value: _selectedSchoolId,
-                      items: _schools
-                          .map(
-                            (school) => ComboBoxItem<int>(
-                              value: school.id!,
-                              child: Text(school.nameAr),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() => _selectedSchoolId = value);
-                        _applyFilters();
-                      },
-                    ),
-                  ],
+          // المدرسة
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('المدرسة'),
+                const SizedBox(height: 4),
+                ComboBox<int>(
+                  placeholder: const Text('جميع المدارس'),
+                  value: _selectedSchoolId,
+                  items: _schools
+                      .map(
+                        (school) => ComboBoxItem<int>(
+                          value: school.id!,
+                          child: Text(school.nameAr),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedSchoolId = value);
+                    _applyFilters();
+                  },
                 ),
-              ),
-              const SizedBox(width: 16),
-
-              // الصف
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('الصف'),
-                    const SizedBox(height: 4),
-                    ComboBox<String>(
-                      placeholder: const Text('جميع الصفوف'),
-                      value: _selectedGrade,
-                      items: _grades
-                          .map(
-                            (grade) => ComboBoxItem<String>(
-                              value: grade,
-                              child: Text(grade),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() => _selectedGrade = value);
-                        _applyFilters();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // الشعبة
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('الشعبة'),
-                    const SizedBox(height: 4),
-                    ComboBox<String>(
-                      placeholder: const Text('جميع الشعب'),
-                      value: _selectedSection,
-                      items: _sections
-                          .map(
-                            (section) => ComboBoxItem<String>(
-                              value: section,
-                              child: Text(section),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() => _selectedSection = value);
-                        _applyFilters();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // الحالة
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('الحالة'),
-                    const SizedBox(height: 4),
-                    ComboBox<String>(
-                      placeholder: const Text('جميع الحالات'),
-                      value: _selectedStatus,
-                      items: _statuses
-                          .map(
-                            (status) => ComboBoxItem<String>(
-                              value: status,
-                              child: Text(status),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() => _selectedStatus = value);
-                        _applyFilters();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              // الجنس
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('الجنس'),
-                    const SizedBox(height: 4),
-                    ComboBox<String>(
-                      placeholder: const Text('جميع الأجناس'),
-                      value: _selectedGender,
-                      items: _genders
-                          .map(
-                            (gender) => ComboBoxItem<String>(
-                              value: gender,
-                              child: Text(gender),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() => _selectedGender = value);
-                        _applyFilters();
-                      },
-                    ),
-                  ],
+          const SizedBox(width: 16),
+          // الصف
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('الصف'),
+                const SizedBox(height: 4),
+                ComboBox<String>(
+                  placeholder: const Text('جميع الصفوف'),
+                  value: _selectedGrade,
+                  items: _grades
+                      .map(
+                        (grade) => ComboBoxItem<String>(
+                          value: grade,
+                          child: Text(grade),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedGrade = value);
+                    _applyFilters();
+                  },
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(child: Container()), // مساحة فارغة
-              Expanded(child: Container()),
-              Expanded(child: Container()),
-            ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          // الشعبة
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('الشعبة'),
+                const SizedBox(height: 4),
+                ComboBox<String>(
+                  placeholder: const Text('جميع الشعب'),
+                  value: _selectedSection,
+                  items: _sections
+                      .map(
+                        (section) => ComboBoxItem<String>(
+                          value: section,
+                          child: Text(section),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedSection = value);
+                    _applyFilters();
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          // الحالة
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('الحالة'),
+                const SizedBox(height: 4),
+                ComboBox<String>(
+                  placeholder: const Text('جميع الحالات'),
+                  value: _selectedStatus,
+                  items: _statuses
+                      .map(
+                        (status) => ComboBoxItem<String>(
+                          value: status,
+                          child: Text(status),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedStatus = value);
+                    _applyFilters();
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          // الجنس
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('الجنس'),
+                const SizedBox(height: 4),
+                ComboBox<String>(
+                  placeholder: const Text('جميع الأجناس'),
+                  value: _selectedGender,
+                  items: _genders
+                      .map(
+                        (gender) => ComboBoxItem<String>(
+                          value: gender,
+                          child: Text(gender),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedGender = value);
+                    _applyFilters();
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
