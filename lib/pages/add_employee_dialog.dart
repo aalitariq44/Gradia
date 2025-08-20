@@ -114,9 +114,10 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Container(
+      child: Material(
+        type: MaterialType.card,
+        color: Colors.transparent, // Ensure background is transparent
+        child: Container(
           width: 500,
           padding: const EdgeInsets.all(24),
           child: Form(
