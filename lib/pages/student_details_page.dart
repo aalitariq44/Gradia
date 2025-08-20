@@ -58,6 +58,19 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
       _installments = await _installmentService.getStudentInstallments(
         _student.id!,
       );
+      // ترتيب الأقساط حسب التاريخ والوقت (الأقدم أولاً)
+      _installments.sort((a, b) {
+        final dateComp = a.paymentDate.compareTo(b.paymentDate);
+        if (dateComp != 0) return dateComp;
+        final partsA = a.paymentTime.split(':');
+        final partsB = b.paymentTime.split(':');
+        final hourA = int.tryParse(partsA[0]) ?? 0;
+        final minA = int.tryParse(partsA[1]) ?? 0;
+        final hourB = int.tryParse(partsB[0]) ?? 0;
+        final minB = int.tryParse(partsB[1]) ?? 0;
+        if (hourA != hourB) return hourA - hourB;
+        return minA - minB;
+      });
 
       // حساب البيانات المالية
       _totalPaid = await _installmentService.getTotalPaidAmount(_student.id!);
@@ -479,10 +492,12 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                                                   flex: 2,
                                                   child: Text(
                                                     installment.id != null
-                                                        ? installment.id.toString()
+                                                        ? installment.id
+                                                              .toString()
                                                         : '-',
                                                     style: const TextStyle(
-                                                      fontWeight: FontWeight.w600,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                     ),
                                                   ),
                                                 ),
