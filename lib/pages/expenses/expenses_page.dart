@@ -204,6 +204,34 @@ class _ExpensesPageState extends State<ExpensesPage> {
             ],
           ),
         ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: () {
+            // TODO: استيراد من Excel
+          },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.upload, size: 16),
+              SizedBox(width: 8),
+              Text('استيراد من Excel'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: () {
+            // TODO: تصدير الى Excel
+          },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.download, size: 16),
+              SizedBox(width: 8),
+              Text('تصدير الى Excel'),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -858,7 +886,6 @@ class _ExpensesPageState extends State<ExpensesPage> {
     return Directionality(
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ScaffoldPage(
-       
         content: Padding(
           padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Column(

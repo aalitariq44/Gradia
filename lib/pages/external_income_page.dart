@@ -517,6 +517,34 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
             ],
           ),
         ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: () {
+            // TODO: استيراد من Excel
+          },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.upload, size: 16),
+              SizedBox(width: 8),
+              Text('استيراد من Excel'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: () {
+            // TODO: تصدير الى Excel
+          },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.download, size: 16),
+              SizedBox(width: 8),
+              Text('تصدير الى Excel'),
+            ],
+          ),
+        ),
       ],
     );
   }
