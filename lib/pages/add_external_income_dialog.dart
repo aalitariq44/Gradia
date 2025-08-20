@@ -8,7 +8,8 @@ import '../models/school_model.dart';
 class AddExternalIncomeDialog extends StatefulWidget {
   final List<School> schools;
 
-  const AddExternalIncomeDialog({Key? key, required this.schools}) : super(key: key);
+  const AddExternalIncomeDialog({Key? key, required this.schools})
+    : super(key: key);
 
   @override
   State<AddExternalIncomeDialog> createState() =>
@@ -18,7 +19,7 @@ class AddExternalIncomeDialog extends StatefulWidget {
 class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  
+
   final ExternalIncomeService _externalIncomeService = ExternalIncomeService();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
@@ -59,7 +60,6 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
     _notesController.dispose();
     super.dispose();
   }
-
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
@@ -200,206 +200,197 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
                       const Divider(color: Colors.green),
                       const SizedBox(height: 16),
 
-                            // Income Type
-                            TextFormField(
-                              controller: _titleController,
+                      // Income Type
+                      TextFormField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          labelText: 'نوع الوارد *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.title),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'يرجى إدخال نوع الوارد';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Description
+                      TextFormField(
+                        controller: _descriptionController,
+                        decoration: const InputDecoration(
+                          labelText: 'وصف الوارد',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.description),
+                        ),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Amount
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _amountController,
                               decoration: const InputDecoration(
-                                labelText: 'نوع الوارد *',
+                                labelText: 'المبلغ *',
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.title),
+                                prefixIcon: Icon(Icons.attach_money),
+                                suffixText: 'د.ع',
                               ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}'),
+                                ),
+                              ],
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
-                                  return 'يرجى إدخال نوع الوارد';
+                                  return 'يرجى إدخال المبلغ';
+                                }
+                                final amount = double.tryParse(value.trim());
+                                if (amount == null || amount <= 0) {
+                                  return 'يرجى إدخال مبلغ صحيح';
                                 }
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 16),
-
-                            // Description
-                            TextFormField(
-                              controller: _descriptionController,
-                              decoration: const InputDecoration(
-                                labelText: 'وصف الوارد',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.description),
-                              ),
-                              maxLines: 2,
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Amount
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _amountController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'المبلغ *',
-                                      border: OutlineInputBorder(),
-                                      prefixIcon: Icon(Icons.attach_money),
-                                      suffixText: 'د.ع',
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                        RegExp(r'^\d+\.?\d{0,2}'),
-                                      ),
-                                    ],
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'يرجى إدخال المبلغ';
-                                      }
-                                      final amount = double.tryParse(
-                                        value.trim(),
-                                      );
-                                      if (amount == null || amount <= 0) {
-                                        return 'يرجى إدخال مبلغ صحيح';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Column(
-                                  children: [
-                                    IconButton(
-                                      onPressed: () {
-                                        final currentValue =
-                                            double.tryParse(
-                                              _amountController.text,
-                                            ) ??
-                                            0;
-                                        _amountController.text =
-                                            (currentValue + 1000).toString();
-                                      },
-                                      icon: const Icon(Icons.add),
-                                      color: Colors.green,
-                                    ),
-                                    IconButton(
-                                      onPressed: () {
-                                        final currentValue =
-                                            double.tryParse(
-                                              _amountController.text,
-                                            ) ??
-                                            0;
-                                        if (currentValue >= 1000) {
-                                          _amountController.text =
-                                              (currentValue - 1000).toString();
-                                        }
-                                      },
-                                      icon: const Icon(Icons.remove),
-                                      color: Colors.red,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            // School and Date
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: DropdownButtonFormField<int>(
-                                    value: _selectedSchoolId,
-                                    decoration: const InputDecoration(
-                                      labelText: 'المدرسة *',
-                                      border: OutlineInputBorder(),
-                                      prefixIcon: Icon(Icons.school),
-                                    ),
-                                    items: widget.schools.map((school) {
-                                      return DropdownMenuItem(
-                                        value: school.id,
-                                        child: Text(school.nameAr),
-                                      );
-                                    }).toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _selectedSchoolId = value;
-                                      });
-                                    },
-                                    validator: (value) {
-                                      if (value == null) {
-                                        return 'يرجى اختيار المدرسة';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: InkWell(
-                                    onTap: _selectDate,
-                                    child: InputDecorator(
-                                      decoration: const InputDecoration(
-                                        labelText: 'تاريخ العملية *',
-                                        border: OutlineInputBorder(),
-                                        prefixIcon: Icon(Icons.calendar_today),
-                                      ),
-                                      child: Text(
-                                        _displayDateFormatter.format(
-                                          _selectedDate,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 32),
-
-                            // Additional Details Section
-                            const Text(
-                              'تفاصيل إضافية',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  final currentValue =
+                                      double.tryParse(_amountController.text) ??
+                                      0;
+                                  _amountController.text = (currentValue + 1000)
+                                      .toString();
+                                },
+                                icon: const Icon(Icons.add),
                                 color: Colors.green,
                               ),
-                            ),
-                            const Divider(color: Colors.green),
-                            const SizedBox(height: 16),
-
-                            // Category
-                            DropdownButtonFormField<String>(
-                              value: _selectedCategory,
-                              decoration: const InputDecoration(
-                                labelText: 'الفئة',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.category),
+                              IconButton(
+                                onPressed: () {
+                                  final currentValue =
+                                      double.tryParse(_amountController.text) ??
+                                      0;
+                                  if (currentValue >= 1000) {
+                                    _amountController.text =
+                                        (currentValue - 1000).toString();
+                                  }
+                                },
+                                icon: const Icon(Icons.remove),
+                                color: Colors.red,
                               ),
-                              items: _categories.map((category) {
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // School and Date
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<int>(
+                              value: _selectedSchoolId,
+                              decoration: const InputDecoration(
+                                labelText: 'المدرسة *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.school),
+                              ),
+                              items: widget.schools.map((school) {
                                 return DropdownMenuItem(
-                                  value: category,
-                                  child: Text(category),
+                                  value: school.id,
+                                  child: Text(school.nameAr),
                                 );
                               }).toList(),
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedCategory = value!;
+                                  _selectedSchoolId = value;
                                 });
                               },
+                              validator: (value) {
+                                if (value == null) {
+                                  return 'يرجى اختيار المدرسة';
+                                }
+                                return null;
+                              },
                             ),
-                            const SizedBox(height: 16),
-
-                            // Notes
-                            TextFormField(
-                              controller: _notesController,
-                              decoration: const InputDecoration(
-                                labelText: 'ملاحظات إضافية',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.note),
-                                alignLabelWithHint: true,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: InkWell(
+                              onTap: _selectDate,
+                              child: InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'تاريخ العملية *',
+                                  border: OutlineInputBorder(),
+                                  prefixIcon: Icon(Icons.calendar_today),
+                                ),
+                                child: Text(
+                                  _displayDateFormatter.format(_selectedDate),
+                                ),
                               ),
-                              maxLines: 3,
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Additional Details Section
+                      const Text(
+                        'تفاصيل إضافية',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
                         ),
                       ),
-                    ),
+                      const Divider(color: Colors.green),
+                      const SizedBox(height: 16),
+
+                      // Category
+                      DropdownButtonFormField<String>(
+                        value: _selectedCategory,
+                        decoration: const InputDecoration(
+                          labelText: 'الفئة',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.category),
+                        ),
+                        items: _categories.map((category) {
+                          return DropdownMenuItem(
+                            value: category,
+                            child: Text(category),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedCategory = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Notes
+                      TextFormField(
+                        controller: _notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'ملاحظات إضافية',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.note),
+                          alignLabelWithHint: true,
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
               // Action Buttons
               const SizedBox(height: 24),

@@ -17,7 +17,7 @@ class AddExpenseDialog extends StatefulWidget {
 
 class _AddExpenseDialogState extends State<AddExpenseDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final ExpenseService _expenseService = ExpenseService();
   final SchoolService _schoolService = SchoolService();
 

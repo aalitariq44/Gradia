@@ -7,25 +7,22 @@ class ExternalIncomeService {
   // إضافة دخل خارجي جديد
   Future<int> addExternalIncome(ExternalIncome income) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول external_income إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     return await db.insert('external_income', income.toMap());
   }
 
   // الحصول على جميع الدخل الخارجي
   Future<List<ExternalIncome>> getAllExternalIncomes() async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول external_income إذا لم يكن موجود
     await _ensureTableExists(db);
-    
-    final maps = await db.query(
-      'external_income',
-      orderBy: 'income_date DESC',
-    );
-    
+
+    final maps = await db.query('external_income', orderBy: 'income_date DESC');
+
     return List.generate(maps.length, (i) {
       return ExternalIncome.fromMap(maps[i]);
     });
@@ -34,17 +31,17 @@ class ExternalIncomeService {
   // الحصول على الدخل الخارجي حسب المدرسة
   Future<List<ExternalIncome>> getExternalIncomesBySchool(int schoolId) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول external_income إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     final maps = await db.query(
       'external_income',
       where: 'school_id = ?',
       whereArgs: [schoolId],
       orderBy: 'income_date DESC',
     );
-    
+
     return List.generate(maps.length, (i) {
       return ExternalIncome.fromMap(maps[i]);
     });
@@ -53,10 +50,10 @@ class ExternalIncomeService {
   // تحديث دخل خارجي
   Future<int> updateExternalIncome(ExternalIncome income) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول external_income إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     return await db.update(
       'external_income',
       income.toMap(),
@@ -68,29 +65,25 @@ class ExternalIncomeService {
   // حذف دخل خارجي
   Future<int> deleteExternalIncome(int id) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول external_income إذا لم يكن موجود
     await _ensureTableExists(db);
-    
-    return await db.delete(
-      'external_income',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+
+    return await db.delete('external_income', where: 'id = ?', whereArgs: [id]);
   }
 
   // الحصول على إجمالي الدخل الخارجي لمدرسة معينة
   Future<double> getTotalExternalIncomeBySchool(int schoolId) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول external_income إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     final result = await db.rawQuery(
       'SELECT SUM(amount) as total FROM external_income WHERE school_id = ?',
       [schoolId],
     );
-    
+
     return (result.first['total'] as double?) ?? 0.0;
   }
 
@@ -100,17 +93,17 @@ class ExternalIncomeService {
     String category,
   ) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول external_income إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     final maps = await db.query(
       'external_income',
       where: 'school_id = ? AND category = ?',
       whereArgs: [schoolId, category],
       orderBy: 'income_date DESC',
     );
-    
+
     return List.generate(maps.length, (i) {
       return ExternalIncome.fromMap(maps[i]);
     });
@@ -123,10 +116,10 @@ class ExternalIncomeService {
     DateTime endDate,
   ) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول external_income إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     final maps = await db.query(
       'external_income',
       where: 'school_id = ? AND income_date BETWEEN ? AND ?',
@@ -137,7 +130,7 @@ class ExternalIncomeService {
       ],
       orderBy: 'income_date DESC',
     );
-    
+
     return List.generate(maps.length, (i) {
       return ExternalIncome.fromMap(maps[i]);
     });

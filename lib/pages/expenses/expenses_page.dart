@@ -18,7 +18,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
   List<ExpenseModel> _allExpenses = [];
   List<ExpenseModel> _filteredExpenses = [];
   List<School> _schools = [];
-  
+
   final ExpenseService _expenseService = ExpenseService();
   final SchoolService _schoolService = SchoolService();
   bool _isLoading = true;
@@ -34,11 +34,15 @@ class _ExpensesPageState extends State<ExpensesPage> {
     final now = DateTime.now();
     final currentMonth = DateTime(now.year, now.month);
     final nextMonth = DateTime(now.year, now.month + 1);
-    
+
     return _allExpenses
-        .where((expense) => 
-            expense.expenseDate.isAfter(currentMonth.subtract(const Duration(days: 1))) &&
-            expense.expenseDate.isBefore(nextMonth))
+        .where(
+          (expense) =>
+              expense.expenseDate.isAfter(
+                currentMonth.subtract(const Duration(days: 1)),
+              ) &&
+              expense.expenseDate.isBefore(nextMonth),
+        )
         .fold(0.0, (sum, expense) => sum + expense.amount);
   }
 
@@ -89,40 +93,50 @@ class _ExpensesPageState extends State<ExpensesPage> {
       // تطبيق فلتر البحث النصي
       if (_searchController.text.trim().isNotEmpty) {
         final searchQuery = _searchController.text.trim().toLowerCase();
-        filteredExpenses = filteredExpenses.where((expense) =>
-          expense.expenseType.toLowerCase().contains(searchQuery) ||
-          (expense.description?.toLowerCase().contains(searchQuery) ?? false) ||
-          (expense.notes?.toLowerCase().contains(searchQuery) ?? false)
-        ).toList();
+        filteredExpenses = filteredExpenses
+            .where(
+              (expense) =>
+                  expense.expenseType.toLowerCase().contains(searchQuery) ||
+                  (expense.description?.toLowerCase().contains(searchQuery) ??
+                      false) ||
+                  (expense.notes?.toLowerCase().contains(searchQuery) ?? false),
+            )
+            .toList();
       }
 
       // تطبيق فلتر المدرسة
       if (_selectedSchoolId != null) {
-        filteredExpenses = filteredExpenses.where((expense) =>
-          expense.schoolId == _selectedSchoolId
-        ).toList();
+        filteredExpenses = filteredExpenses
+            .where((expense) => expense.schoolId == _selectedSchoolId)
+            .toList();
       }
 
       // تطبيق فلتر نوع المصروف
       if (_selectedExpenseType != null) {
-        filteredExpenses = filteredExpenses.where((expense) =>
-          expense.expenseType == _selectedExpenseType
-        ).toList();
+        filteredExpenses = filteredExpenses
+            .where((expense) => expense.expenseType == _selectedExpenseType)
+            .toList();
       }
 
       // تطبيق فلتر التاريخ
       if (_startDate != null) {
-        filteredExpenses = filteredExpenses.where((expense) =>
-          expense.expenseDate.isAfter(_startDate!) || 
-          expense.expenseDate.isAtSameMomentAs(_startDate!)
-        ).toList();
+        filteredExpenses = filteredExpenses
+            .where(
+              (expense) =>
+                  expense.expenseDate.isAfter(_startDate!) ||
+                  expense.expenseDate.isAtSameMomentAs(_startDate!),
+            )
+            .toList();
       }
-      
+
       if (_endDate != null) {
-        filteredExpenses = filteredExpenses.where((expense) =>
-          expense.expenseDate.isBefore(_endDate!) || 
-          expense.expenseDate.isAtSameMomentAs(_endDate!)
-        ).toList();
+        filteredExpenses = filteredExpenses
+            .where(
+              (expense) =>
+                  expense.expenseDate.isBefore(_endDate!) ||
+                  expense.expenseDate.isAtSameMomentAs(_endDate!),
+            )
+            .toList();
       }
 
       setState(() {

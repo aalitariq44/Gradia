@@ -19,7 +19,7 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
   List<ExternalIncome> _filteredIncomes = [];
   List<School> _schools = [];
   bool _isLoading = false;
-  
+
   final ExternalIncomeService _externalIncomeService = ExternalIncomeService();
   final SchoolService _schoolService = SchoolService();
 

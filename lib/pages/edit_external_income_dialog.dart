@@ -19,7 +19,7 @@ class EditExternalIncomeDialog extends StatefulWidget {
 
 class _EditExternalIncomeDialogState extends State<EditExternalIncomeDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final ExternalIncomeService _externalIncomeService = ExternalIncomeService();
   final SchoolService _schoolService = SchoolService();
   final _titleController = TextEditingController();

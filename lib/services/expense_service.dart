@@ -7,25 +7,22 @@ class ExpenseService {
   // إضافة مصروف جديد
   Future<int> addExpense(ExpenseModel expense) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول expenses إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     return await db.insert('expenses', expense.toMap());
   }
 
   // الحصول على جميع المصروفات
   Future<List<ExpenseModel>> getAllExpenses() async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول expenses إذا لم يكن موجود
     await _ensureTableExists(db);
-    
-    final maps = await db.query(
-      'expenses',
-      orderBy: 'expense_date DESC',
-    );
-    
+
+    final maps = await db.query('expenses', orderBy: 'expense_date DESC');
+
     return List.generate(maps.length, (i) {
       return ExpenseModel.fromMap(maps[i]);
     });
@@ -34,17 +31,17 @@ class ExpenseService {
   // الحصول على المصروفات حسب المدرسة
   Future<List<ExpenseModel>> getExpensesBySchool(int schoolId) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول expenses إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     final maps = await db.query(
       'expenses',
       where: 'school_id = ?',
       whereArgs: [schoolId],
       orderBy: 'expense_date DESC',
     );
-    
+
     return List.generate(maps.length, (i) {
       return ExpenseModel.fromMap(maps[i]);
     });
@@ -53,10 +50,10 @@ class ExpenseService {
   // تحديث مصروف
   Future<int> updateExpense(ExpenseModel expense) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول expenses إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     return await db.update(
       'expenses',
       expense.toMap(),
@@ -68,29 +65,25 @@ class ExpenseService {
   // حذف مصروف
   Future<int> deleteExpense(int id) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول expenses إذا لم يكن موجود
     await _ensureTableExists(db);
-    
-    return await db.delete(
-      'expenses',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+
+    return await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
   }
 
   // الحصول على إجمالي المصروفات لمدرسة معينة
   Future<double> getTotalExpensesBySchool(int schoolId) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول expenses إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     final result = await db.rawQuery(
       'SELECT SUM(amount) as total FROM expenses WHERE school_id = ?',
       [schoolId],
     );
-    
+
     return (result.first['total'] as double?) ?? 0.0;
   }
 
@@ -100,17 +93,17 @@ class ExpenseService {
     String expenseType,
   ) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول expenses إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     final maps = await db.query(
       'expenses',
       where: 'school_id = ? AND expense_type = ?',
       whereArgs: [schoolId, expenseType],
       orderBy: 'expense_date DESC',
     );
-    
+
     return List.generate(maps.length, (i) {
       return ExpenseModel.fromMap(maps[i]);
     });
@@ -123,10 +116,10 @@ class ExpenseService {
     DateTime endDate,
   ) async {
     final db = await _dbHelper.database;
-    
+
     // إضافة جدول expenses إذا لم يكن موجود
     await _ensureTableExists(db);
-    
+
     final maps = await db.query(
       'expenses',
       where: 'school_id = ? AND expense_date BETWEEN ? AND ?',
@@ -137,7 +130,7 @@ class ExpenseService {
       ],
       orderBy: 'expense_date DESC',
     );
-    
+
     return List.generate(maps.length, (i) {
       return ExpenseModel.fromMap(maps[i]);
     });
