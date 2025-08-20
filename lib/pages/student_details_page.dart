@@ -396,6 +396,15 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                                             Expanded(
                                               flex: 2,
                                               child: Text(
+                                                'التسلسل',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
                                                 'رقم الوصل',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
@@ -464,8 +473,17 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                                               children: [
                                                 Expanded(
                                                   flex: 2,
+                                                  child: Text('${index + 1}'),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
                                                   child: Text(
-                                                    '${installment.id ?? index + 1}',
+                                                    installment.id != null
+                                                        ? installment.id.toString()
+                                                        : '-',
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
                                                   ),
                                                 ),
                                                 Expanded(
