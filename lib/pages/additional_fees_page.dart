@@ -227,26 +227,29 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
     return Directionality(
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ScaffoldPage(
-        content: Column(
-          children: [
-            // القسم العلوي - شريط الإحصائيات
-            _buildStatisticsSection(),
-            const SizedBox(height: 16),
+        content: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Column(
+            children: [
+              // القسم العلوي - شريط الإحصائيات
+              _buildStatisticsSection(),
+              const SizedBox(height: 16),
 
-            // قسم الفلاتر والبحث
-            _buildFiltersSection(),
-            const SizedBox(height: 16),
+              // قسم الفلاتر والبحث
+              _buildFiltersSection(),
+              const SizedBox(height: 16),
 
-            // أزرار العمليات
-            _buildActionButtons(),
-            const SizedBox(height: 16),
+              // أزرار العمليات
+              _buildActionButtons(),
+              const SizedBox(height: 16),
 
-            // الجدول الرئيسي
-            Expanded(child: _buildFeesTable()),
+              // الجدول الرئيسي
+              Expanded(child: _buildFeesTable()),
 
-            // القسم السفلي - ملخص الرسوم
-            _buildSummarySection(),
-          ],
+              // القسم السفلي - ملخص الرسوم
+              _buildSummarySection(),
+            ],
+          ),
         ),
       ),
     );
