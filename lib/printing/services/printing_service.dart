@@ -39,9 +39,15 @@ class PrintingService {
     final pdf = pw.Document();
 
     // تحديد اتجاه الصفحة
-    final pageFormat = config.orientation == 'landscape'
-        ? PdfPageFormat.a4.landscape
-        : PdfPageFormat.a4;
+    final pageFormat = (config.orientation == 'landscape'
+            ? PdfPageFormat.a4.landscape
+            : PdfPageFormat.a4)
+        .copyWith(
+      marginLeft: 20,
+      marginRight: 20,
+      marginTop: 20,
+      marginBottom: 20,
+    );
 
     // تصفية البيانات بناءً على الأعمدة المختارة
     final filteredData = _filterDataByColumns(data, config.columnsToShow);
@@ -340,9 +346,15 @@ class PrintingService {
     final pdf = pw.Document();
 
     // تحديد اتجاه الصفحة
-    final pageFormat = config.orientation == 'landscape'
-        ? PdfPageFormat.a4.landscape
-        : PdfPageFormat.a4;
+    final pageFormat = (config.orientation == 'landscape'
+            ? PdfPageFormat.a4.landscape
+            : PdfPageFormat.a4)
+        .copyWith(
+      marginLeft: 20,
+      marginRight: 20,
+      marginTop: 20,
+      marginBottom: 20,
+    );
 
     // تصفية البيانات بناءً على الأعمدة المختارة
     final filteredData = _filterDataByColumns(data, config.columnsToShow);
