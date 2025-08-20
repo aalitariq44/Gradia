@@ -139,86 +139,88 @@ class _SchoolsPageState extends State<SchoolsPage> {
 
     showDialog(
       context: context,
-      builder: (context) => ContentDialog(
-        title: Text(localizations.addNewSchool),
-        content: SizedBox(
-          width: 500,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('اسم المدرسة (عربي) *'),
-                const SizedBox(height: 8),
-                TextBox(
-                  controller: _nameArController,
-                  placeholder: 'أدخل اسم المدرسة بالعربية',
-                ),
-                const SizedBox(height: 16),
-                Text('اسم المدرسة (إنجليزي)'),
-                const SizedBox(height: 8),
-                TextBox(
-                  controller: _nameEnController,
-                  placeholder: 'أدخل اسم المدرسة بالإنجليزية',
-                ),
-                const SizedBox(height: 16),
-                Text('العنوان'),
-                const SizedBox(height: 8),
-                TextBox(
-                  controller: _addressController,
-                  placeholder: 'أدخل عنوان المدرسة',
-                ),
-                const SizedBox(height: 16),
-                Text('رقم الهاتف'),
-                const SizedBox(height: 8),
-                TextBox(
-                  controller: _phoneController,
-                  placeholder: 'أدخل رقم الهاتف',
-                ),
-                const SizedBox(height: 16),
-                Text('اسم المدير'),
-                const SizedBox(height: 8),
-                TextBox(
-                  controller: _principalNameController,
-                  placeholder: 'أدخل اسم مدير المدرسة',
-                ),
-                const SizedBox(height: 16),
-                Text('أنواع المدرسة *'),
-                const SizedBox(height: 8),
-                ...School.availableSchoolTypes
-                    .map(
-                      (type) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Checkbox(
-                          checked: _selectedSchoolTypes.contains(type),
-                          onChanged: (checked) {
-                            setState(() {
-                              if (checked == true) {
-                                _selectedSchoolTypes.add(type);
-                              } else {
-                                _selectedSchoolTypes.remove(type);
-                              }
-                            });
-                          },
-                          content: Text(type),
+      builder: (context) => StatefulBuilder(
+        builder: (context, dialogSetState) => ContentDialog(
+          title: Text(localizations.addNewSchool),
+          content: SizedBox(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('اسم المدرسة (عربي) *'),
+                  const SizedBox(height: 8),
+                  TextBox(
+                    controller: _nameArController,
+                    placeholder: 'أدخل اسم المدرسة بالعربية',
+                  ),
+                  const SizedBox(height: 16),
+                  Text('اسم المدرسة (إنجليزي)'),
+                  const SizedBox(height: 8),
+                  TextBox(
+                    controller: _nameEnController,
+                    placeholder: 'أدخل اسم المدرسة بالإنجليزية',
+                  ),
+                  const SizedBox(height: 16),
+                  Text('العنوان'),
+                  const SizedBox(height: 8),
+                  TextBox(
+                    controller: _addressController,
+                    placeholder: 'أدخل عنوان المدرسة',
+                  ),
+                  const SizedBox(height: 16),
+                  Text('رقم الهاتف'),
+                  const SizedBox(height: 8),
+                  TextBox(
+                    controller: _phoneController,
+                    placeholder: 'أدخل رقم الهاتف',
+                  ),
+                  const SizedBox(height: 16),
+                  Text('اسم المدير'),
+                  const SizedBox(height: 8),
+                  TextBox(
+                    controller: _principalNameController,
+                    placeholder: 'أدخل اسم مدير المدرسة',
+                  ),
+                  const SizedBox(height: 16),
+                  Text('أنواع المدرسة *'),
+                  const SizedBox(height: 8),
+                  ...School.availableSchoolTypes
+                      .map(
+                        (type) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Checkbox(
+                            checked: _selectedSchoolTypes.contains(type),
+                            onChanged: (checked) {
+                              dialogSetState(() {
+                                if (checked == true) {
+                                  _selectedSchoolTypes.add(type);
+                                } else {
+                                  _selectedSchoolTypes.remove(type);
+                                }
+                              });
+                            },
+                            content: Text(type),
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(),
-              ],
+                      )
+                      .toList(),
+                ],
+              ),
             ),
           ),
+          actions: [
+            Button(
+              child: Text(localizations.cancel),
+              onPressed: () {
+                _clearForm();
+                Navigator.pop(context);
+              },
+            ),
+            FilledButton(child: Text(localizations.add), onPressed: _addSchool),
+          ],
         ),
-        actions: [
-          Button(
-            child: Text(localizations.cancel),
-            onPressed: () {
-              _clearForm();
-              Navigator.pop(context);
-            },
-          ),
-          FilledButton(child: Text(localizations.add), onPressed: _addSchool),
-        ],
       ),
     );
   }
