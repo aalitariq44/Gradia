@@ -58,9 +58,9 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
       _installments = await _installmentService.getStudentInstallments(
         _student.id!,
       );
-      // ترتيب الأقساط حسب التاريخ والوقت (الأقدم أولاً)
+      // ترتيب الأقساط حسب التاريخ والوقت (الأحدث أولاً)
       _installments.sort((a, b) {
-        final dateComp = a.paymentDate.compareTo(b.paymentDate);
+        final dateComp = b.paymentDate.compareTo(a.paymentDate);
         if (dateComp != 0) return dateComp;
         final partsA = a.paymentTime.split(':');
         final partsB = b.paymentTime.split(':');
@@ -68,8 +68,8 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
         final minA = int.tryParse(partsA[1]) ?? 0;
         final hourB = int.tryParse(partsB[0]) ?? 0;
         final minB = int.tryParse(partsB[1]) ?? 0;
-        if (hourA != hourB) return hourA - hourB;
-        return minA - minB;
+        if (hourA != hourB) return hourB - hourA;
+        return minB - minA;
       });
 
       // حساب البيانات المالية
