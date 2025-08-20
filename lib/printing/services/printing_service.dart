@@ -273,7 +273,7 @@ class PrintingService {
                   textAlign: pw.TextAlign.center,
                 ),
               );
-            }).toList(),
+            }).toList().reversed.toList(),
           ),
 
         // صفوف البيانات
@@ -293,7 +293,7 @@ class PrintingService {
                       textAlign: pw.TextAlign.center,
                     ),
                   );
-                }).toList(),
+                }).toList().reversed.toList(),
               ),
             )
             .toList(),
