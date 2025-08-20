@@ -1,5 +1,4 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/material.dart' hide Colors, FilledButton;
 import 'package:flutter/services.dart';
 import '../models/student_model.dart';
 import '../models/school_model.dart';
@@ -128,7 +127,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedSchool == null) {
-      _showErrorSnackBar('يرجى اختيار المدرسة');
+      _showErrorDialog('يرجى اختيار المدرسة');
       return;
     }
 
@@ -159,23 +158,43 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
       await _studentService.updateStudent(updatedStudent);
       widget.onStudentUpdated();
       Navigator.of(context).pop();
-      _showSuccessSnackBar('تم تحديث الطالب بنجاح');
+      _showSuccessDialog('تم تحديث الطالب بنجاح');
     } catch (e) {
-      _showErrorSnackBar('خطأ في تحديث الطالب: ${e.toString()}');
+      _showErrorDialog('خطأ في تحديث الطالب: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('نجاح'),
+        content: Text(message),
+        actions: [
+          Button(
+            child: const Text('حسنا'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('خطأ'),
+        content: Text(message),
+        actions: [
+          Button(
+            child: const Text('حسنا'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
     );
   }
 
