@@ -12,7 +12,8 @@ class ExamplePrintingPage extends StatefulWidget {
 
 class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
   final PrintingService _printingService = PrintingService();
-  final StudentPrintingService _studentPrintingService = StudentPrintingService();
+  final StudentPrintingService _studentPrintingService =
+      StudentPrintingService();
 
   // مثال على بيانات عامة
   final List<Map<String, dynamic>> _sampleData = [
@@ -45,7 +46,10 @@ class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
                   children: [
                     const Text(
                       '1. طباعة سريعة',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text('طباعة سريعة بإعدادات افتراضية'),
@@ -70,7 +74,10 @@ class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
                   children: [
                     const Text(
                       '2. طباعة مع إعدادات مخصصة',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text('طباعة مع تخصيص العنوان والتخطيط'),
@@ -95,7 +102,10 @@ class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
                   children: [
                     const Text(
                       '3. طباعة تفاصيل',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text('طباعة تقرير مفصل مع إحصائيات'),
@@ -120,7 +130,10 @@ class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
                   children: [
                     const Text(
                       '4. طباعة مباشرة',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text('طباعة مباشرة بدون معاينة'),
@@ -193,10 +206,26 @@ class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
     try {
       // إنشاء بيانات إحصائية
       final statisticsData = [
-        {'category': 'الإحصائيات', 'item': 'إجمالي الطلاب', 'value': '${_sampleData.length}'},
-        {'category': 'الإحصائيات', 'item': 'متوسط الدرجات', 'value': _calculateAverage().toStringAsFixed(2)},
-        {'category': 'الإحصائيات', 'item': 'أعلى درجة', 'value': _getMaxScore().toStringAsFixed(2)},
-        {'category': 'الإحصائيات', 'item': 'أقل درجة', 'value': _getMinScore().toStringAsFixed(2)},
+        {
+          'category': 'الإحصائيات',
+          'item': 'إجمالي الطلاب',
+          'value': '${_sampleData.length}',
+        },
+        {
+          'category': 'الإحصائيات',
+          'item': 'متوسط الدرجات',
+          'value': _calculateAverage().toStringAsFixed(2),
+        },
+        {
+          'category': 'الإحصائيات',
+          'item': 'أعلى درجة',
+          'value': _getMaxScore().toStringAsFixed(2),
+        },
+        {
+          'category': 'الإحصائيات',
+          'item': 'أقل درجة',
+          'value': _getMinScore().toStringAsFixed(2),
+        },
       ];
 
       final config = PrintConfig(
@@ -212,10 +241,7 @@ class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
         },
       );
 
-      await _printingService.printTable(
-        data: statisticsData,
-        config: config,
-      );
+      await _printingService.printTable(data: statisticsData, config: config);
     } catch (e) {
       _showError('خطأ في طباعة التفاصيل: $e');
     }
@@ -244,18 +270,24 @@ class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
 
   /// حساب متوسط الدرجات
   double _calculateAverage() {
-    final scores = _sampleData.map((student) => student['score'] as double).toList();
+    final scores = _sampleData
+        .map((student) => student['score'] as double)
+        .toList();
     return scores.reduce((a, b) => a + b) / scores.length;
   }
 
   /// الحصول على أعلى درجة
   double _getMaxScore() {
-    return _sampleData.map((student) => student['score'] as double).reduce((a, b) => a > b ? a : b);
+    return _sampleData
+        .map((student) => student['score'] as double)
+        .reduce((a, b) => a > b ? a : b);
   }
 
   /// الحصول على أقل درجة
   double _getMinScore() {
-    return _sampleData.map((student) => student['score'] as double).reduce((a, b) => a < b ? a : b);
+    return _sampleData
+        .map((student) => student['score'] as double)
+        .reduce((a, b) => a < b ? a : b);
   }
 
   /// عرض رسالة خطأ
@@ -311,10 +343,7 @@ mixin PrintingMixin<T extends StatefulWidget> on State<T> {
         columnsToShow: columnsToShow ?? [],
       );
 
-      await printingService.printTable(
-        data: data,
-        config: config,
-      );
+      await printingService.printTable(data: data, config: config);
     } catch (e) {
       if (mounted) {
         showDialog(
@@ -347,11 +376,7 @@ mixin PrintingMixin<T extends StatefulWidget> on State<T> {
           : () => printDataList(title: title, data: data),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon),
-          const SizedBox(width: 4),
-          Text(buttonText),
-        ],
+        children: [Icon(icon), const SizedBox(width: 4), Text(buttonText)],
       ),
     );
   }

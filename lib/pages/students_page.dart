@@ -635,9 +635,10 @@ class _StudentsPageState extends State<StudentsPage> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                                                            IconButton(
+                              IconButton(
                                 icon: const Icon(FluentIcons.edit, size: 16),
-                                onPressed: () => _showEditStudentDialog(student),
+                                onPressed: () =>
+                                    _showEditStudentDialog(student),
                               ),
                               IconButton(
                                 icon: Icon(
@@ -757,24 +758,24 @@ class _StudentsPageState extends State<StudentsPage> {
     try {
       // إنشاء معلومات التصفية المطبقة
       final filters = <String, dynamic>{};
-      
+
       if (_selectedSchoolId != null) {
         final school = _schools.firstWhere((s) => s.id == _selectedSchoolId);
         filters['schoolName'] = school.nameAr;
       }
-      
+
       if (_selectedGrade != null) {
         filters['grade'] = _selectedGrade;
       }
-      
+
       if (_selectedSection != null) {
         filters['section'] = _selectedSection;
       }
-      
+
       if (_selectedStatus != null) {
         filters['status'] = _selectedStatus;
       }
-      
+
       if (_selectedGender != null) {
         filters['gender'] = _selectedGender;
       }
@@ -793,7 +794,9 @@ class _StudentsPageState extends State<StudentsPage> {
           context,
           builder: (context, close) => InfoBar(
             title: const Text('تم إرسال الطباعة'),
-            content: Text('تم إرسال قائمة ${_filteredStudents.length} طالب للطباعة'),
+            content: Text(
+              'تم إرسال قائمة ${_filteredStudents.length} طالب للطباعة',
+            ),
             severity: InfoBarSeverity.success,
             onClose: close,
           ),

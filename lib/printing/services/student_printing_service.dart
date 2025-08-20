@@ -5,7 +5,8 @@ import '../../models/school_model.dart';
 
 /// خدمة طباعة متخصصة للطلاب
 class StudentPrintingService {
-  static final StudentPrintingService _instance = StudentPrintingService._internal();
+  static final StudentPrintingService _instance =
+      StudentPrintingService._internal();
   factory StudentPrintingService() => _instance;
   StudentPrintingService._internal();
 
@@ -20,7 +21,7 @@ class StudentPrintingService {
   }) async {
     // تحويل بيانات الطلاب إلى تنسيق قابل للطباعة
     final printData = _convertStudentsToTableData(students, schools);
-    
+
     // إنشاء عنوان ديناميكي بناءً على التصفية
     final title = _generateTitle(filters);
     final subtitle = _generateSubtitle(students.length, filters);
@@ -55,7 +56,10 @@ class StudentPrintingService {
   }
 
   /// طباعة سريعة لقائمة الطلاب
-  Future<void> quickPrintStudents(List<Student> students, List<School> schools) async {
+  Future<void> quickPrintStudents(
+    List<Student> students,
+    List<School> schools,
+  ) async {
     await printStudentsList(
       students: students,
       schools: schools,
@@ -70,17 +74,14 @@ class StudentPrintingService {
     bool showPreview = true,
   }) async {
     final printData = _convertStudentDetailsToTableData(student, school);
-    
+
     final config = PrintConfig(
       title: 'بيانات الطالب: ${student.name}',
       subtitle: 'مدرسة: ${school.nameAr}',
       orientation: 'portrait',
       fontSize: 12.0,
       headerFontSize: 18.0,
-      columnHeaders: {
-        'field': 'البيان',
-        'value': 'القيمة',
-      },
+      columnHeaders: {'field': 'البيان', 'value': 'القيمة'},
       columnsToShow: ['field', 'value'],
     );
 
@@ -93,15 +94,15 @@ class StudentPrintingService {
 
   /// تحويل قائمة الطلاب إلى بيانات جدول
   List<Map<String, dynamic>> _convertStudentsToTableData(
-    List<Student> students, 
+    List<Student> students,
     List<School> schools,
   ) {
     final schoolsMap = {for (var school in schools) school.id: school.nameAr};
-    
+
     return students.asMap().entries.map((entry) {
       final index = entry.key + 1;
       final student = entry.value;
-      
+
       return {
         'index': index,
         'name': student.name,
@@ -119,7 +120,7 @@ class StudentPrintingService {
 
   /// تحويل تفاصيل طالب واحد إلى بيانات جدول
   List<Map<String, dynamic>> _convertStudentDetailsToTableData(
-    Student student, 
+    Student student,
     School school,
   ) {
     return [
@@ -131,7 +132,10 @@ class StudentPrintingService {
       {'field': 'السنة الدراسية', 'value': student.academicYear ?? '-'},
       {'field': 'الجنس', 'value': student.gender},
       {'field': 'رقم الهاتف', 'value': student.phone ?? '-'},
-      {'field': 'الرسوم الدراسية', 'value': '${student.totalFee.toStringAsFixed(0)} د.ع'},
+      {
+        'field': 'الرسوم الدراسية',
+        'value': '${student.totalFee.toStringAsFixed(0)} د.ع',
+      },
       {'field': 'تاريخ المباشرة', 'value': _formatDate(student.startDate)},
       {'field': 'الحالة', 'value': student.status},
       {'field': 'تاريخ الإنشاء', 'value': _formatDate(student.createdAt)},
@@ -161,15 +165,15 @@ class StudentPrintingService {
     }
 
     List<String> titleParts = ['قائمة الطلاب'];
-    
+
     if (filters['schoolName'] != null) {
       titleParts.add('- مدرسة ${filters['schoolName']}');
     }
-    
+
     if (filters['grade'] != null) {
       titleParts.add('- صف ${filters['grade']}');
     }
-    
+
     if (filters['section'] != null) {
       titleParts.add('- شعبة ${filters['section']}');
     }
@@ -188,13 +192,13 @@ class StudentPrintingService {
   /// توليد عنوان فرعي مع إحصائيات
   String _generateSubtitle(int totalStudents, Map<String, dynamic>? filters) {
     List<String> subtitleParts = ['إجمالي الطلاب: $totalStudents'];
-    
+
     if (filters != null && filters.isNotEmpty) {
       subtitleParts.add('(مصفى)');
     }
-    
+
     subtitleParts.add('- تاريخ الطباعة: ${_formatDate(DateTime.now())}');
-    
+
     return subtitleParts.join(' ');
   }
 
@@ -211,11 +215,11 @@ class StudentPrintingService {
     bool showPreview = true,
   }) async {
     final printData = _convertStatisticsToTableData(
-      genderCounts, 
-      statusCounts, 
+      genderCounts,
+      statusCounts,
       gradeCounts,
     );
-    
+
     final config = PrintConfig(
       title: 'إحصائيات الطلاب',
       subtitle: 'تقرير شامل عن توزيع الطلاب',
@@ -245,12 +249,14 @@ class StudentPrintingService {
     Map<String, int> gradeCounts,
   ) {
     List<Map<String, dynamic>> data = [];
-    
+
     final totalStudents = genderCounts.values.fold(0, (a, b) => a + b);
-    
+
     // إحصائيات الجنس
     genderCounts.forEach((gender, count) {
-      final percentage = totalStudents > 0 ? (count / totalStudents * 100).toStringAsFixed(1) : '0.0';
+      final percentage = totalStudents > 0
+          ? (count / totalStudents * 100).toStringAsFixed(1)
+          : '0.0';
       data.add({
         'category': 'الجنس',
         'item': gender,
@@ -258,10 +264,12 @@ class StudentPrintingService {
         'percentage': '$percentage%',
       });
     });
-    
+
     // إحصائيات الحالة
     statusCounts.forEach((status, count) {
-      final percentage = totalStudents > 0 ? (count / totalStudents * 100).toStringAsFixed(1) : '0.0';
+      final percentage = totalStudents > 0
+          ? (count / totalStudents * 100).toStringAsFixed(1)
+          : '0.0';
       data.add({
         'category': 'الحالة',
         'item': status,
@@ -269,10 +277,12 @@ class StudentPrintingService {
         'percentage': '$percentage%',
       });
     });
-    
+
     // إحصائيات الصفوف
     gradeCounts.forEach((grade, count) {
-      final percentage = totalStudents > 0 ? (count / totalStudents * 100).toStringAsFixed(1) : '0.0';
+      final percentage = totalStudents > 0
+          ? (count / totalStudents * 100).toStringAsFixed(1)
+          : '0.0';
       data.add({
         'category': 'الصف',
         'item': grade,
@@ -280,7 +290,7 @@ class StudentPrintingService {
         'percentage': '$percentage%',
       });
     });
-    
+
     return data;
   }
 }

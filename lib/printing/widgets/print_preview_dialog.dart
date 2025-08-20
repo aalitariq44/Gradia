@@ -45,22 +45,16 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
           child: Row(
             children: [
               // لوحة الإعدادات
-              Expanded(
-                flex: 1,
-                child: _buildSettingsPanel(),
-              ),
-              
+              Expanded(flex: 1, child: _buildSettingsPanel()),
+
               Container(
                 width: 1,
                 height: double.infinity,
                 color: Colors.grey[200],
               ),
-              
+
               // معاينة المحتوى
-              Expanded(
-                flex: 2,
-                child: _buildPreviewPanel(),
-              ),
+              Expanded(flex: 2, child: _buildPreviewPanel()),
             ],
           ),
         ),
@@ -100,7 +94,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            
+
             InfoLabel(
               label: 'العنوان الرئيسي',
               child: TextBox(
@@ -113,7 +107,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             InfoLabel(
               label: 'العنوان الفرعي',
               child: TextBox(
@@ -133,7 +127,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            
+
             InfoLabel(
               label: 'اتجاه الصفحة',
               child: ComboBox<String>(
@@ -150,7 +144,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             InfoLabel(
               label: 'حجم الخط',
               child: NumberBox<double>(
@@ -168,7 +162,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             InfoLabel(
               label: 'حجم خط العنوان',
               child: NumberBox<double>(
@@ -193,7 +187,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            
+
             Checkbox(
               checked: _config.includeHeader,
               onChanged: (value) {
@@ -203,7 +197,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               },
               content: const Text('إظهار رأس الصفحة'),
             ),
-            
+
             Checkbox(
               checked: _config.includeFooter,
               onChanged: (value) {
@@ -213,7 +207,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               },
               content: const Text('إظهار تذييل الصفحة'),
             ),
-            
+
             Checkbox(
               checked: _config.includeDate,
               onChanged: (value) {
@@ -223,12 +217,14 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               },
               content: const Text('إظهار التاريخ'),
             ),
-            
+
             Checkbox(
               checked: _config.includePageNumbers,
               onChanged: (value) {
                 setState(() {
-                  _config = _config.copyWith(includePageNumbers: value ?? false);
+                  _config = _config.copyWith(
+                    includePageNumbers: value ?? false,
+                  );
                 });
               },
               content: const Text('إظهار أرقام الصفحات'),
@@ -250,7 +246,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -265,14 +261,14 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
                   children: [
                     // معاينة رأس الصفحة
                     if (_config.includeHeader) _buildHeaderPreview(),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // معاينة البيانات
                     _buildDataPreview(),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // معاينة التذييل
                     if (_config.includeFooter) _buildFooterPreview(),
                   ],
@@ -280,9 +276,9 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // معلومات إضافية
           Container(
             padding: const EdgeInsets.all(12),
@@ -295,7 +291,9 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               children: [
                 Text('إجمالي السجلات: ${widget.data.length}'),
                 const SizedBox(height: 4),
-                Text('اتجاه الصفحة: ${_config.orientation == 'portrait' ? 'عمودي' : 'أفقي'}'),
+                Text(
+                  'اتجاه الصفحة: ${_config.orientation == 'portrait' ? 'عمودي' : 'أفقي'}',
+                ),
                 const SizedBox(height: 4),
                 Text('حجم الخط: ${_config.fontSize.toStringAsFixed(1)}'),
               ],
@@ -355,15 +353,13 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
 
   Widget _buildDataPreview() {
     if (widget.data.isEmpty) {
-      return const Center(
-        child: Text('لا توجد بيانات للمعاينة'),
-      );
+      return const Center(child: Text('لا توجد بيانات للمعاينة'));
     }
 
     // عرض أول 5 صفوف فقط للمعاينة
     final previewData = widget.data.take(5).toList();
-    final columns = _config.columnsToShow.isNotEmpty 
-        ? _config.columnsToShow 
+    final columns = _config.columnsToShow.isNotEmpty
+        ? _config.columnsToShow
         : widget.data.first.keys.toList();
 
     return Table(
@@ -387,21 +383,25 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             );
           }).toList(),
         ),
-        
+
         // صفوف البيانات
-        ...previewData.map((row) => TableRow(
-          children: columns.map((column) {
-            final cellValue = _formatCellValue(row[column]);
-            return Padding(
-              padding: const EdgeInsets.all(4),
-              child: Text(
-                cellValue,
-                style: TextStyle(fontSize: _config.fontSize),
-                textAlign: TextAlign.center,
+        ...previewData
+            .map(
+              (row) => TableRow(
+                children: columns.map((column) {
+                  final cellValue = _formatCellValue(row[column]);
+                  return Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Text(
+                      cellValue,
+                      style: TextStyle(fontSize: _config.fontSize),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                }).toList(),
               ),
-            );
-          }).toList(),
-        )).toList(),
+            )
+            .toList(),
       ],
     );
   }
@@ -436,7 +436,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
 
   Future<void> _handlePrint() async {
     setState(() => _isLoading = true);
-    
+
     try {
       await widget.onPrint(_config);
       if (mounted) {

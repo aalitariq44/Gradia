@@ -35,15 +35,15 @@ class PrintingService {
     await _loadArabicFont();
 
     final pdf = pw.Document();
-    
+
     // تحديد اتجاه الصفحة
-    final pageFormat = config.orientation == 'landscape' 
-        ? PdfPageFormat.a4.landscape 
+    final pageFormat = config.orientation == 'landscape'
+        ? PdfPageFormat.a4.landscape
         : PdfPageFormat.a4;
 
     // إنشاء الصفحات
     final pages = _buildTablePages(data, config);
-    
+
     for (int i = 0; i < pages.length; i++) {
       pdf.addPage(
         pw.Page(
@@ -53,17 +53,19 @@ class PrintingService {
             return pw.Column(
               children: [
                 // رأس الصفحة
-                if (config.includeHeader) _buildHeader(config, i + 1, pages.length),
-                
+                if (config.includeHeader)
+                  _buildHeader(config, i + 1, pages.length),
+
                 pw.SizedBox(height: 20),
-                
+
                 // محتوى الجدول
                 pages[i],
-                
+
                 pw.Spacer(),
-                
+
                 // تذييل الصفحة
-                if (config.includeFooter) _buildFooter(config, i + 1, pages.length),
+                if (config.includeFooter)
+                  _buildFooter(config, i + 1, pages.length),
               ],
             );
           },
@@ -108,7 +110,7 @@ class PrintingService {
               ),
             ),
           ),
-          
+
           // العنوان الفرعي
           if (config.subtitle.isNotEmpty) ...[
             pw.SizedBox(height: 5),
@@ -122,9 +124,9 @@ class PrintingService {
               ),
             ),
           ],
-          
+
           pw.SizedBox(height: 10),
-          
+
           // معلومات إضافية
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -138,7 +140,7 @@ class PrintingService {
                     fontSize: config.fontSize - 2,
                   ),
                 ),
-              
+
               // رقم الصفحة
               if (config.includePageNumbers)
                 pw.Text(
@@ -160,9 +162,7 @@ class PrintingService {
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
       decoration: pw.BoxDecoration(
-        border: pw.Border(
-          top: pw.BorderSide(color: PdfColors.grey),
-        ),
+        border: pw.Border(top: pw.BorderSide(color: PdfColors.grey)),
       ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -189,7 +189,10 @@ class PrintingService {
   }
 
   /// بناء صفحات الجدول
-  List<pw.Widget> _buildTablePages(List<Map<String, dynamic>> data, PrintConfig config) {
+  List<pw.Widget> _buildTablePages(
+    List<Map<String, dynamic>> data,
+    PrintConfig config,
+  ) {
     if (data.isEmpty) {
       return [
         pw.Center(
@@ -206,7 +209,7 @@ class PrintingService {
 
     List<pw.Widget> pages = [];
     const int rowsPerPage = 25; // عدد الصفوف في كل صفحة
-    
+
     for (int i = 0; i < data.length; i += rowsPerPage) {
       final pageData = data.skip(i).take(rowsPerPage).toList();
       pages.add(_buildTableWidget(pageData, config, i == 0));
@@ -216,10 +219,14 @@ class PrintingService {
   }
 
   /// بناء جدول واحد
-  pw.Widget _buildTableWidget(List<Map<String, dynamic>> data, PrintConfig config, bool includeHeaders) {
+  pw.Widget _buildTableWidget(
+    List<Map<String, dynamic>> data,
+    PrintConfig config,
+    bool includeHeaders,
+  ) {
     // تحديد الأعمدة المراد عرضها
-    final columns = config.columnsToShow.isNotEmpty 
-        ? config.columnsToShow 
+    final columns = config.columnsToShow.isNotEmpty
+        ? config.columnsToShow
         : data.first.keys.toList();
 
     return pw.Table(
@@ -245,24 +252,28 @@ class PrintingService {
               );
             }).toList(),
           ),
-        
+
         // صفوف البيانات
-        ...data.map((row) => pw.TableRow(
-          children: columns.map((column) {
-            final cellValue = _formatCellValue(row[column]);
-            return pw.Container(
-              padding: const pw.EdgeInsets.all(5),
-              child: pw.Text(
-                cellValue,
-                style: pw.TextStyle(
-                  font: _arabicFont,
-                  fontSize: config.fontSize,
-                ),
-                textAlign: pw.TextAlign.center,
+        ...data
+            .map(
+              (row) => pw.TableRow(
+                children: columns.map((column) {
+                  final cellValue = _formatCellValue(row[column]);
+                  return pw.Container(
+                    padding: const pw.EdgeInsets.all(5),
+                    child: pw.Text(
+                      cellValue,
+                      style: pw.TextStyle(
+                        font: _arabicFont,
+                        fontSize: config.fontSize,
+                      ),
+                      textAlign: pw.TextAlign.center,
+                    ),
+                  );
+                }).toList(),
               ),
-            );
-          }).toList(),
-        )).toList(),
+            )
+            .toList(),
       ],
     );
   }
@@ -292,10 +303,7 @@ class PrintingService {
     String subtitle = '',
     bool showPreview = true,
   }) async {
-    final config = PrintConfig(
-      title: title,
-      subtitle: subtitle,
-    );
+    final config = PrintConfig(title: title, subtitle: subtitle);
 
     await printTable(
       data: data,
