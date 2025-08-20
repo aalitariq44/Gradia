@@ -353,124 +353,131 @@ class _TuitionsPageState extends State<TuitionsPage> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              // قائمة المدارس
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('المدرسة'),
-                    const SizedBox(height: 8),
-                    ComboBox<int?>(
-                      placeholder: const Text('جميع المدارس'),
-                      value: _selectedSchoolId,
-                      items: [
-                        const ComboBoxItem<int?>(
-                          value: null,
-                          child: Text('جميع المدارس'),
-                        ),
-                        ..._schools.map(
-                          (school) => ComboBoxItem<int?>(
-                            value: school.id,
-                            child: Text(school.nameAr),
+          // Filters row with right alignment and fixed widths
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // قائمة المدارس
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('المدرسة'),
+                      const SizedBox(height: 8),
+                      ComboBox<int?>(
+                        placeholder: const Text('جميع المدارس'),
+                        value: _selectedSchoolId,
+                        items: [
+                          const ComboBoxItem<int?>(
+                            value: null,
+                            child: Text('جميع المدارس'),
                           ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedSchoolId = value;
-                          _selectedStudentId = null; // إعادة تعيين الطالب
-                        });
-                        _applyFilters();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // قائمة الطلاب
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('الطالب'),
-                    const SizedBox(height: 8),
-                    ComboBox<int?>(
-                      placeholder: const Text('جميع الطلاب'),
-                      value: _selectedStudentId,
-                      items: [
-                        const ComboBoxItem<int?>(
-                          value: null,
-                          child: Text('جميع الطلاب'),
-                        ),
-                        ..._students
-                            .where(
-                              (student) =>
-                                  _selectedSchoolId == null ||
-                                  student.schoolId == _selectedSchoolId,
-                            )
-                            .map(
-                              (student) => ComboBoxItem<int?>(
-                                value: student.id,
-                                child: Text(student.name),
-                              ),
+                          ..._schools.map(
+                            (school) => ComboBoxItem<int?>(
+                              value: school.id,
+                              child: Text(school.nameAr),
                             ),
-                      ],
-                      onChanged: (value) {
-                        setState(() => _selectedStudentId = value);
-                        _applyFilters();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // تاريخ البداية
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('من تاريخ'),
-                    const SizedBox(height: 8),
-                    TextFormBox(
-                      controller: _startDateController,
-                      placeholder: 'اختر تاريخ البداية',
-                      readOnly: true,
-                      onTap: () => _selectDate(true),
-                      suffix: IconButton(
-                        icon: const Icon(FluentIcons.calendar),
-                        onPressed: () => _selectDate(true),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSchoolId = value;
+                            _selectedStudentId = null;
+                          });
+                          _applyFilters();
+                        },
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-
-              // تاريخ النهاية
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('إلى تاريخ'),
-                    const SizedBox(height: 8),
-                    TextFormBox(
-                      controller: _endDateController,
-                      placeholder: 'اختر تاريخ النهاية',
-                      readOnly: true,
-                      onTap: () => _selectDate(false),
-                      suffix: IconButton(
-                        icon: const Icon(FluentIcons.calendar),
-                        onPressed: () => _selectDate(false),
+                const SizedBox(width: 8),
+                // قائمة الطلاب
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('الطالب'),
+                      const SizedBox(height: 8),
+                      ComboBox<int?>(
+                        placeholder: const Text('جميع الطلاب'),
+                        value: _selectedStudentId,
+                        items: [
+                          const ComboBoxItem<int?>(
+                            value: null,
+                            child: Text('جميع الطلاب'),
+                          ),
+                          ..._students
+                              .where(
+                                (student) =>
+                                    _selectedSchoolId == null ||
+                                    student.schoolId == _selectedSchoolId,
+                              )
+                              .map(
+                                (student) => ComboBoxItem<int?>(
+                                  value: student.id,
+                                  child: Text(student.name),
+                                ),
+                              ),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedStudentId = value);
+                          _applyFilters();
+                        },
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                // تاريخ البداية
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('من تاريخ'),
+                      const SizedBox(height: 8),
+                      TextFormBox(
+                        controller: _startDateController,
+                        placeholder: 'اختر تاريخ البداية',
+                        readOnly: true,
+                        onTap: () => _selectDate(true),
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.calendar),
+                          onPressed: () => _selectDate(true),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // تاريخ النهاية
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('إلى تاريخ'),
+                      const SizedBox(height: 8),
+                      TextFormBox(
+                        controller: _endDateController,
+                        placeholder: 'اختر تاريخ النهاية',
+                        readOnly: true,
+                        onTap: () => _selectDate(false),
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.calendar),
+                          onPressed: () => _selectDate(false),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
