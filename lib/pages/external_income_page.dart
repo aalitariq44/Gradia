@@ -5,6 +5,7 @@ import '../core/services/external_income_service.dart';
 import '../core/services/school_service.dart';
 import '../core/database/models/external_income_model.dart';
 import '../core/database/models/school_model.dart';
+import 'add_external_income_dialog.dart';
 
 class ExternalIncomePage extends StatefulWidget {
   const ExternalIncomePage({Key? key}) : super(key: key);
@@ -467,7 +468,15 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
         ),
         const SizedBox(width: 12),
         FilledButton(
-          onPressed: () => print('سيتم إضافة نافذة إضافة الوارد'),
+          onPressed: () async {
+            final result = await showDialog<bool>(
+              context: context,
+              builder: (context) => const AddExternalIncomeDialog(),
+            );
+            if (result == true) {
+              await _loadData();
+            }
+          },
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
