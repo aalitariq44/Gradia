@@ -5,6 +5,7 @@ import '../models/student_model.dart';
 import '../models/school_model.dart';
 import '../services/student_service.dart';
 import '../services/school_service.dart';
+import './student_details_page.dart';
 
 class StudentsPage extends StatefulWidget {
   const StudentsPage({Key? key}) : super(key: key);
@@ -30,7 +31,6 @@ class _StudentsPageState extends State<StudentsPage> {
   String? _selectedGender;
 
   // إحصائيات
-  Map<String, int> _statusCounts = {};
   Map<String, int> _genderCounts = {};
 
   // قوائم الخيارات
@@ -78,14 +78,13 @@ class _StudentsPageState extends State<StudentsPage> {
     try {
       final studentsData = await _studentService.getAllStudents();
       final schoolsData = await _schoolService.getAllSchools();
-      final statusCounts = await _studentService.getStudentStatusCounts();
       final genderCounts = await _studentService.getStudentGenderCounts();
 
       setState(() {
         _students = studentsData;
         _filteredStudents = studentsData;
+        _sortStudents(); // تطبيق الترتيب الافتراضي
         _schools = schoolsData;
-        _statusCounts = statusCounts;
         _genderCounts = genderCounts;
       });
     } catch (e) {
@@ -93,6 +92,48 @@ class _StudentsPageState extends State<StudentsPage> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _sortStudents() {
+    // قائمة الترتيب المخصص للصفوف
+    const gradeOrder = [
+      'الأول الابتدائي',
+      'الثاني الابتدائي',
+      'الثالث الابتدائي',
+      'الرابع الابتدائي',
+      'الخامس الابتدائي',
+      'السادس الابتدائي',
+      'الأول المتوسط',
+      'الثاني المتوسط',
+      'الثالث المتوسط',
+      'الرابع العلمي',
+      'الرابع الأدبي',
+      'الخامس العلمي',
+      'الخامس الأدبي',
+      'السادس العلمي',
+      'السادس الأدبي',
+    ];
+
+    _filteredStudents.sort((a, b) {
+      final gradeAIndex = gradeOrder.indexOf(a.grade);
+      final gradeBIndex = gradeOrder.indexOf(b.grade);
+
+      // إذا كان الصف غير موجود في القائمة، ضعه في النهاية
+      final effectiveGradeAIndex = gradeAIndex == -1
+          ? gradeOrder.length
+          : gradeAIndex;
+      final effectiveGradeBIndex = gradeBIndex == -1
+          ? gradeOrder.length
+          : gradeBIndex;
+
+      final comparison = effectiveGradeAIndex.compareTo(effectiveGradeBIndex);
+      if (comparison != 0) {
+        return comparison;
+      }
+
+      // إذا كانت الصفوف متساوية، قم بالترتيب حسب الاسم
+      return a.name.compareTo(b.name);
+    });
   }
 
   Future<void> _applyFilters() async {
@@ -107,6 +148,7 @@ class _StudentsPageState extends State<StudentsPage> {
 
       setState(() {
         _filteredStudents = filteredStudents;
+        _sortStudents(); // تطبيق الترتيب بعد التصفية
       });
     } catch (e) {
       _showErrorDialog('خطأ في التصفية: $e');
@@ -121,6 +163,7 @@ class _StudentsPageState extends State<StudentsPage> {
       _selectedStatus = null;
       _selectedGender = null;
       _filteredStudents = _students;
+      _sortStudents(); // تطبيق الترتيب بعد مسح التصفية
     });
   }
 
@@ -370,7 +413,12 @@ class _StudentsPageState extends State<StudentsPage> {
         const SizedBox(width: 8),
         Button(
           onPressed: () {
-            // TODO: تنفيذ الطباعة
+            // TODO: تنفيذ الطباعة باستخدام `_filteredStudents`
+            // هذه القائمة تحتوي الآن على الطلاب بالترتيب الصحيح
+            print('Students to print: ${_filteredStudents.length}');
+            _showErrorDialog(
+              'وظيفة الطباعة لم تنفذ بعد، لكن البيانات جاهزة للطباعة بالترتيب الصحيح.',
+            );
           },
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -521,79 +569,102 @@ class _StudentsPageState extends State<StudentsPage> {
               itemCount: _filteredStudents.length,
               itemBuilder: (context, index) {
                 final student = _filteredStudents[index];
-                return Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.grey[100])),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(flex: 1, child: Text('${index + 1}')),
-                      Expanded(flex: 3, child: Text(student.name)),
-                      Expanded(
-                        flex: 3,
-                        child: Text(_getSchoolName(student.schoolId)),
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      FluentPageRoute(
+                        builder: (context) =>
+                            StudentDetailsPage(student: student),
                       ),
-                      Expanded(flex: 2, child: Text(student.grade)),
-                      Expanded(flex: 1, child: Text(student.section)),
-                      Expanded(flex: 2, child: Text(student.phone ?? '-')),
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(student.status),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey[100]),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(flex: 1, child: Text('${index + 1}')),
+                        Expanded(
+                          flex: 3,
                           child: Text(
-                            student.status,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                            student.name,
+                            style: TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w500,
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ),
-                      ),
-                      Expanded(flex: 1, child: Text(student.gender)),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          '${student.totalFee.toStringAsFixed(0)} د.ع',
+                        Expanded(
+                          flex: 3,
+                          child: Text(_getSchoolName(student.schoolId)),
                         ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          DateFormat('yyyy/MM/dd').format(student.startDate),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(FluentIcons.edit, size: 16),
-                              onPressed: () {
-                                // TODO: تنفيذ التعديل
-                              },
+                        Expanded(flex: 2, child: Text(student.grade)),
+                        Expanded(flex: 1, child: Text(student.section)),
+                        Expanded(flex: 2, child: Text(student.phone ?? '-')),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                            IconButton(
-                              icon: Icon(
-                                FluentIcons.delete,
-                                size: 16,
-                                color: Colors.red,
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(student.status),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              student.status,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
                               ),
-                              onPressed: () => _deleteStudent(student),
+                              textAlign: TextAlign.center,
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        Expanded(flex: 1, child: Text(student.gender)),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            '${student.totalFee.toStringAsFixed(0)} د.ع',
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            DateFormat('yyyy/MM/dd').format(student.startDate),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(FluentIcons.edit, size: 16),
+                                onPressed: () {
+                                  // TODO: تنفيذ التعديل
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  FluentIcons.delete,
+                                  size: 16,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () => _deleteStudent(student),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

@@ -10,7 +10,7 @@ class StudentService {
       'students',
       where: 'status != ?',
       whereArgs: ['محذوف'],
-      orderBy: 'name ASC',
+      
     );
 
     return List.generate(maps.length, (i) {
@@ -24,7 +24,7 @@ class StudentService {
       'students',
       where: 'school_id = ? AND status != ?',
       whereArgs: [schoolId, 'محذوف'],
-      orderBy: 'name ASC',
+      
     );
 
     return List.generate(maps.length, (i) {
@@ -151,7 +151,7 @@ class StudentService {
         '%$query%',
         'محذوف',
       ],
-      orderBy: 'name ASC',
+      
     );
 
     return List.generate(maps.length, (i) {
@@ -336,7 +336,7 @@ class StudentService {
       'students',
       where: whereClause,
       whereArgs: whereArgs,
-      orderBy: 'name ASC',
+      
     );
 
     return List.generate(maps.length, (i) {
