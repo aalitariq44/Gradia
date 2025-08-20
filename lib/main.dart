@@ -5,6 +5,8 @@ import 'pages/schools_page.dart';
 import 'pages/students_page.dart';
 import 'pages/tuitions_page.dart';
 import 'pages/additional_fees_page.dart';
+import 'pages/teachers_page.dart';
+import 'pages/employees_page.dart';
 import 'pages/font_demo_page.dart';
 import 'utils/font_config.dart';
 
@@ -81,12 +83,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       PaneItem(
         icon: const Icon(FluentIcons.people),
         title: const Text('المعلمين'),
-        body: Center(child: const Text('صفحة المعلمين قيد التطوير')),
+        body: const TeachersPage(),
       ),
       PaneItem(
         icon: const Icon(FluentIcons.people),
         title: const Text('الموظفين'),
-        body: Center(child: const Text('صفحة الموظفين قيد التطوير')),
+        body: const EmployeesPage(),
       ),
       PaneItem(
         icon: const Icon(FluentIcons.import),

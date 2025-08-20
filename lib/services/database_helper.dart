@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5, // زيادة رقم الإصدار
+      version: 6, // زيادة رقم الإصدار لإضافة جداول المعلمين والموظفين
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -172,6 +172,55 @@ class DatabaseHelper {
         'CREATE INDEX idx_additional_fees_paid ON additional_fees (paid)',
       );
     }
+
+    if (oldVersion < 6) {
+      // ترقية من الإصدار 5 إلى 6 - إضافة جداول المعلمين والموظفين
+
+      // إنشاء جدول المعلمين
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS teachers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          school_id INTEGER NOT NULL,
+          class_hours INTEGER NOT NULL DEFAULT 0,
+          monthly_salary DECIMAL(10,2) NOT NULL,
+          phone TEXT,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // إنشاء جدول الموظفين
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS employees (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          school_id INTEGER NOT NULL,
+          job_type TEXT NOT NULL,
+          monthly_salary DECIMAL(10,2) NOT NULL,
+          phone TEXT,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // إنشاء فهارس للجداول الجديدة
+      await db.execute(
+        'CREATE INDEX idx_teachers_school_id ON teachers (school_id)',
+      );
+      await db.execute('CREATE INDEX idx_teachers_name ON teachers (name)');
+      await db.execute(
+        'CREATE INDEX idx_employees_school_id ON employees (school_id)',
+      );
+      await db.execute('CREATE INDEX idx_employees_name ON employees (name)');
+      await db.execute(
+        'CREATE INDEX idx_employees_job_type ON employees (job_type)',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -258,6 +307,38 @@ class DatabaseHelper {
       )
     ''');
 
+    // إنشاء جدول المعلمين
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS teachers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        school_id INTEGER NOT NULL,
+        class_hours INTEGER NOT NULL DEFAULT 0,
+        monthly_salary DECIMAL(10,2) NOT NULL,
+        phone TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // إنشاء جدول الموظفين
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS employees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        school_id INTEGER NOT NULL,
+        job_type TEXT NOT NULL,
+        monthly_salary DECIMAL(10,2) NOT NULL,
+        phone TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+      )
+    ''');
+
     // إنشاء فهارس للبحث السريع
     await db.execute(
       'CREATE INDEX idx_students_school_id ON students (school_id)',
@@ -275,6 +356,17 @@ class DatabaseHelper {
     );
     await db.execute(
       'CREATE INDEX idx_additional_fees_paid ON additional_fees (paid)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_teachers_school_id ON teachers (school_id)',
+    );
+    await db.execute('CREATE INDEX idx_teachers_name ON teachers (name)');
+    await db.execute(
+      'CREATE INDEX idx_employees_school_id ON employees (school_id)',
+    );
+    await db.execute('CREATE INDEX idx_employees_name ON employees (name)');
+    await db.execute(
+      'CREATE INDEX idx_employees_job_type ON employees (job_type)',
     );
 
     // إدراج مستخدم افتراضي (admin/admin123)
