@@ -223,10 +223,6 @@ class _StudentsPageState extends State<StudentsPage> {
                     _buildFilterBar(),
                     const SizedBox(height: 16),
 
-                    // الأزرار الوظيفية
-                    _buildActionButtons(),
-                    const SizedBox(height: 16),
-
                     // الجدول الرئيسي
                     Expanded(child: _buildStudentsTable()),
 
@@ -247,7 +243,8 @@ class _StudentsPageState extends State<StudentsPage> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start, // Align content to the start (right in RTL)
+        mainAxisAlignment: MainAxisAlignment
+            .start, // Align content to the start (right in RTL)
         children: [
           // المدرسة
           Column(
@@ -373,71 +370,66 @@ class _StudentsPageState extends State<StudentsPage> {
               ),
             ],
           ),
+          // فاصل وارزار الوظائف على الجانب الآخر
+          const Spacer(),
+          // فاصل بسيط بين التصفية والأزرار
+          Container(width: 1, color: Colors.grey),
+          const SizedBox(width: 8),
+          // الأزرار الوظيفية
+          FilledButton(
+            onPressed: _showAddStudentDialog,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(FluentIcons.add),
+                SizedBox(width: 4),
+                Text('إضافة طالب'),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Button(
+            onPressed: _loadData,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(FluentIcons.refresh),
+                SizedBox(width: 4),
+                Text('تحديث'),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Button(
+            onPressed: () {
+              print('Students to print: ${_filteredStudents.length}');
+              _showErrorDialog(
+                'وظيفة الطباعة لم تنفذ بعد، لكن البيانات جاهزة للطباعة بالترتيب الصحيح.',
+              );
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(FluentIcons.print),
+                SizedBox(width: 4),
+                Text('طباعة'),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Button(
+            onPressed: _clearFilters,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(FluentIcons.clear_filter),
+                SizedBox(width: 4),
+                Text('مسح التصفية'),
+              ],
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Row(
-      children: [
-        FilledButton(
-          onPressed: _showAddStudentDialog,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(FluentIcons.add),
-              SizedBox(width: 4),
-              Text('إضافة طالب'),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Button(
-          onPressed: _loadData,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(FluentIcons.refresh),
-              SizedBox(width: 4),
-              Text('تحديث'),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Button(
-          onPressed: () {
-            // TODO: تنفيذ الطباعة باستخدام `_filteredStudents`
-            // هذه القائمة تحتوي الآن على الطلاب بالترتيب الصحيح
-            print('Students to print: ${_filteredStudents.length}');
-            _showErrorDialog(
-              'وظيفة الطباعة لم تنفذ بعد، لكن البيانات جاهزة للطباعة بالترتيب الصحيح.',
-            );
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(FluentIcons.print),
-              SizedBox(width: 4),
-              Text('طباعة'),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        Button(
-          onPressed: _clearFilters,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(FluentIcons.clear_filter),
-              SizedBox(width: 4),
-              Text('مسح التصفية'),
-            ],
-          ),
-        ),
-        const Spacer(),
-        Text('عدد الطلاب المعروضين: ${_filteredStudents.length}'),
-      ],
     );
   }
 
