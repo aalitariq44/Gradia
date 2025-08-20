@@ -7,7 +7,9 @@ import '../core/database/models/external_income_model.dart';
 import '../core/database/models/school_model.dart';
 
 class AddExternalIncomeDialog extends StatefulWidget {
-  const AddExternalIncomeDialog({Key? key}) : super(key: key);
+  final List<SchoolModel> schools;
+
+  const AddExternalIncomeDialog({Key? key, required this.schools}) : super(key: key);
 
   @override
   State<AddExternalIncomeDialog> createState() =>
@@ -24,8 +26,6 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
   int? _selectedSchoolId;
   String _selectedCategory = 'رسوم دراسية';
   DateTime _selectedDate = DateTime.now();
-  List<SchoolModel> _schools = [];
-  bool _isLoading = false;
   bool _isSubmitting = false;
 
   final List<String> _categories = [
@@ -45,7 +45,9 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
   @override
   void initState() {
     super.initState();
-    _loadSchools();
+    if (widget.schools.isNotEmpty) {
+      _selectedSchoolId = widget.schools.first.id;
+    }
   }
 
   @override
@@ -57,29 +59,6 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
     super.dispose();
   }
 
-  Future<void> _loadSchools() async {
-    setState(() => _isLoading = true);
-    try {
-      final schools = await SchoolService.getAllSchools();
-      setState(() {
-        _schools = schools;
-        if (schools.isNotEmpty) {
-          _selectedSchoolId = schools.first.id;
-        }
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('خطأ في تحميل المدارس: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
@@ -202,25 +181,23 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
               const SizedBox(height: 24),
 
               // Form
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Form(
-                      key: _formKey,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Basic Information Section
-                            const Text(
-                              'المعلومات الأساسية',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                            const Divider(color: Colors.green),
-                            const SizedBox(height: 16),
+              Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Basic Information Section
+                      const Text(
+                        'المعلومات الأساسية',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const Divider(color: Colors.green),
+                      const SizedBox(height: 16),
 
                             // Income Type
                             TextFormField(
@@ -332,7 +309,7 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
                                       border: OutlineInputBorder(),
                                       prefixIcon: Icon(Icons.school),
                                     ),
-                                    items: _schools.map((school) {
+                                    items: widget.schools.map((school) {
                                       return DropdownMenuItem(
                                         value: school.id,
                                         child: Text(school.nameAr),

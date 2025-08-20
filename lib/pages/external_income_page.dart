@@ -471,7 +471,7 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
           onPressed: () async {
             final result = await showDialog<bool>(
               context: context,
-              builder: (context) => const AddExternalIncomeDialog(),
+              builder: (context) => AddExternalIncomeDialog(schools: _schools),
             );
             if (result == true) {
               await _loadData();
