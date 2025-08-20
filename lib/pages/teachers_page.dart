@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
+import 'package:intl/intl.dart';
 import '../models/teacher_model.dart';
 import '../models/school_model.dart';
 import '../services/teacher_service.dart';
@@ -20,11 +22,14 @@ class _TeachersPageState extends State<TeachersPage> {
   List<Teacher> _teachers = [];
   List<Teacher> _filteredTeachers = [];
   List<School> _schools = [];
+  bool _isLoading = false;
 
-  final TextEditingController _searchController = TextEditingController();
+  // متحكمات التصفية
   int? _selectedSchoolId;
-  bool _isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
+  // الإحصائيات
   int _totalTeachers = 0;
   int _totalClassHours = 0;
   double _totalSalaries = 0.0;
@@ -43,65 +48,107 @@ class _TeachersPageState extends State<TeachersPage> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-
     try {
-      final teachers = await _teacherService.getAllTeachers();
-      final schools = await _schoolService.getAllSchools();
-      final totalTeachers = await _teacherService.getTeachersCount();
-      final totalClassHours = await _teacherService.getTotalClassHours();
-      final totalSalaries = await _teacherService.getTotalSalaries();
-
-      setState(() {
-        _teachers = teachers;
-        _filteredTeachers = teachers;
-        _schools = schools;
-        _totalTeachers = totalTeachers;
-        _totalClassHours = totalClassHours;
-        _totalSalaries = totalSalaries;
-        _isLoading = false;
-      });
+      await Future.wait([_loadTeachers(), _loadSchools()]);
+      _applyFilters();
+      await _loadStatistics();
     } catch (e) {
+      _showErrorDialog('خطأ في تحميل البيانات: $e');
+    } finally {
       setState(() => _isLoading = false);
-      _showErrorSnackBar('خطأ في تحميل البيانات: ${e.toString()}');
     }
   }
 
-  void _filterTeachers() {
+  Future<void> _loadTeachers() async {
+    _teachers = await _teacherService.getAllTeachers();
+  }
+
+  Future<void> _loadSchools() async {
+    _schools = await _schoolService.getAllSchools();
+  }
+
+  Future<void> _loadStatistics() async {
+    final totalTeachers = await _teacherService.getTeachersCount();
+    final totalClassHours = await _teacherService.getTotalClassHours();
+    final totalSalaries = await _teacherService.getTotalSalaries();
+
     setState(() {
-      _filteredTeachers = _teachers.where((teacher) {
-        final matchesSearch =
-            _searchController.text.isEmpty ||
-            teacher.name.toLowerCase().contains(
-              _searchController.text.toLowerCase(),
-            );
+      _totalTeachers = totalTeachers;
+      _totalClassHours = totalClassHours;
+      _totalSalaries = totalSalaries;
+    });
+  }
 
-        final matchesSchool =
-            _selectedSchoolId == null || teacher.schoolId == _selectedSchoolId;
+  void _applyFilters() {
+    List<Teacher> filtered = List.from(_teachers);
 
-        return matchesSearch && matchesSchool;
+    // تصفية حسب المدرسة
+    if (_selectedSchoolId != null) {
+      filtered = filtered
+          .where((teacher) => teacher.schoolId == _selectedSchoolId)
+          .toList();
+    }
+
+    // تصفية حسب البحث (اسم المعلم)
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((teacher) {
+        return teacher.name.toLowerCase().contains(_searchQuery.toLowerCase());
       }).toList();
+    }
+
+    setState(() {
+      _filteredTeachers = filtered;
     });
   }
 
   void _clearFilters() {
     setState(() {
-      _searchController.clear();
       _selectedSchoolId = null;
-      _filteredTeachers = _teachers;
+      _searchController.clear();
+      _searchQuery = '';
     });
+    _applyFilters();
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('خطأ'),
+        content: Text(message),
+        actions: [
+          FilledButton(
+            child: const Text('موافق'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('نجح'),
+        content: Text(message),
+        actions: [
+          FilledButton(
+            child: const Text('موافق'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
   }
 
   String _getSchoolName(int schoolId) {
-    final school = _schools.firstWhere(
-      (s) => s.id == schoolId,
-      orElse: () => School(
-        id: 0,
-        nameAr: 'غير محدد',
-        schoolTypes: [],
-        createdAt: DateTime.now(),
-      ),
-    );
-    return school.nameAr;
+    try {
+      final school = _schools.firstWhere((s) => s.id == schoolId);
+      return school.nameAr;
+    } catch (e) {
+      return 'غير محدد';
+    }
   }
 
   void _showAddTeacherDialog() {
@@ -112,6 +159,7 @@ class _TeachersPageState extends State<TeachersPage> {
         onTeacherAdded: () {
           _loadData();
           Navigator.of(context).pop();
+          _showSuccessDialog('تم إضافة المعلم بنجاح');
         },
       ),
     );
@@ -126,6 +174,7 @@ class _TeachersPageState extends State<TeachersPage> {
         onTeacherUpdated: () {
           _loadData();
           Navigator.of(context).pop();
+          _showSuccessDialog('تم تحديث المعلم بنجاح');
         },
       ),
     );
@@ -134,29 +183,28 @@ class _TeachersPageState extends State<TeachersPage> {
   void _showDeleteConfirmation(Teacher teacher) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => ContentDialog(
         title: const Text('تأكيد الحذف'),
         content: Text('هل أنت متأكد من حذف المعلم "${teacher.name}"؟'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+          Button(
             child: const Text('إلغاء'),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () async {
               try {
                 await _teacherService.deleteTeacher(teacher.id!);
                 Navigator.of(context).pop();
                 _loadData();
-                _showSuccessSnackBar('تم حذف المعلم بنجاح');
+                _showSuccessDialog('تم حذف المعلم بنجاح');
               } catch (e) {
                 Navigator.of(context).pop();
-                _showErrorSnackBar('خطأ في حذف المعلم: ${e.toString()}');
+                _showErrorDialog('خطأ في حذف المعلم: ${e.toString()}');
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+            style: ButtonStyle(
+              backgroundColor: ButtonState.all(Colors.red),
             ),
             child: const Text('حذف'),
           ),
@@ -165,366 +213,546 @@ class _TeachersPageState extends State<TeachersPage> {
     );
   }
 
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('إدارة المعلمين'),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
-        elevation: 0,
+    return Directionality(
+      textDirection: flutter_widgets.TextDirection.rtl,
+      child: ScaffoldPage(
+        content: Padding(
+          padding: const EdgeInsets.only(left: 16, bottom: 16),
+          child: Column(
+            children: [
+              // شريط إدارة المعلمين
+              _buildManagementBar(),
+              const SizedBox(height: 16),
+
+              // قسم التصفية والبحث
+              _buildFilterSection(),
+              const SizedBox(height: 16),
+
+              // أزرار الإجراءات
+              _buildActionButtons(),
+              const SizedBox(height: 16),
+
+              // الجدول الرئيسي
+              Expanded(child: _buildTeachersTable()),
+
+              // معلومات التلخيص
+              _buildSummarySection(),
+            ],
+          ),
+        ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
+    );
+  }
+
+  Widget _buildManagementBar() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // قسم التحكم والبحث
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
+                const Text(
+                  'إدارة المعلمين',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'عرض وإدارة جميع المعلمين في النظام مع إمكانيات البحث والتصفية المتقدمة',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[120]),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.blue.light,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'إجمالي المعلمين',
+                  style: TextStyle(
                     color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          // قائمة المدارس
-                          Expanded(
-                            flex: 2,
-                            child: DropdownButtonFormField<int>(
-                              value: _selectedSchoolId,
-                              decoration: const InputDecoration(
-                                labelText: 'تصفية حسب المدرسة',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                              ),
-                              items: [
-                                const DropdownMenuItem<int>(
-                                  value: null,
-                                  child: Text('جميع المدارس'),
-                                ),
-                                ..._schools.map(
-                                  (school) => DropdownMenuItem<int>(
-                                    value: school.id,
-                                    child: Text(school.nameAr),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() => _selectedSchoolId = value);
-                                _filterTeachers();
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          // حقل البحث
-                          Expanded(
-                            flex: 3,
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: const InputDecoration(
-                                labelText: 'البحث بالاسم',
-                                prefixIcon: Icon(Icons.search),
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                              ),
-                              onChanged: (_) => _filterTeachers(),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: _filterTeachers,
-                            icon: const Icon(Icons.search),
-                            label: const Text('بحث'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade700,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: _clearFilters,
-                            icon: const Icon(Icons.clear),
-                            label: const Text('مسح الفلتر'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade600,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: _loadData,
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('تحديث'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green.shade600,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                          const Spacer(),
-                          ElevatedButton.icon(
-                            onPressed: _showAddTeacherDialog,
-                            icon: const Icon(Icons.add),
-                            label: const Text('إضافة معلم'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade800,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-
-                // جدول البيانات
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.2),
-                          spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: _filteredTeachers.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'لا توجد معلمين',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          )
-                        : SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              columns: const [
-                                DataColumn(label: Text('#')),
-                                DataColumn(label: Text('الاسم')),
-                                DataColumn(label: Text('المدرسة')),
-                                DataColumn(label: Text('عدد الحصص')),
-                                DataColumn(label: Text('الراتب الشهري')),
-                                DataColumn(label: Text('رقم الهاتف')),
-                                DataColumn(label: Text('ملاحظات')),
-                                DataColumn(label: Text('إجراءات')),
-                              ],
-                              rows: _filteredTeachers.asMap().entries.map((
-                                entry,
-                              ) {
-                                final index = entry.key;
-                                final teacher = entry.value;
-                                return DataRow(
-                                  color:
-                                      MaterialStateProperty.resolveWith<Color?>(
-                                        (states) => index % 2 == 0
-                                            ? Colors.grey.shade50
-                                            : Colors.white,
-                                      ),
-                                  cells: [
-                                    DataCell(Text('${index + 1}')),
-                                    DataCell(Text(teacher.name)),
-                                    DataCell(
-                                      Text(_getSchoolName(teacher.schoolId)),
-                                    ),
-                                    DataCell(Text('${teacher.classHours}')),
-                                    DataCell(
-                                      Text(
-                                        '${teacher.monthlySalary.toStringAsFixed(2)} د.ع',
-                                      ),
-                                    ),
-                                    DataCell(Text(teacher.phone ?? '-')),
-                                    DataCell(
-                                      SizedBox(
-                                        width: 100,
-                                        child: Text(
-                                          teacher.notes ?? '-',
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                    DataCell(
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.edit,
-                                              color: Colors.blue,
-                                            ),
-                                            onPressed: () =>
-                                                _showEditTeacherDialog(teacher),
-                                            tooltip: 'تعديل',
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.delete,
-                                              color: Colors.red,
-                                            ),
-                                            onPressed: () =>
-                                                _showDeleteConfirmation(
-                                                  teacher,
-                                                ),
-                                            tooltip: 'حذف',
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                          ),
+                const SizedBox(height: 4),
+                Text(
+                  '$_totalTeachers معلم',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                // قسم الملخص
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade200),
-                  ),
+  Widget _buildFilterSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'التصفية والبحث',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+
+          // Filters row with right alignment and fixed widths
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // قائمة المدارس
+                SizedBox(
+                  width: 200,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'ملخص المعلمين',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildSummaryCard(
-                              'إجمالي المعلمين',
-                              '$_totalTeachers',
-                              Icons.people,
-                              Colors.blue,
-                            ),
+                      const Text('المدرسة'),
+                      const SizedBox(height: 8),
+                      ComboBox<int?>(
+                        placeholder: const Text('جميع المدارس'),
+                        value: _selectedSchoolId,
+                        items: [
+                          const ComboBoxItem<int?>(
+                            value: null,
+                            child: Text('جميع المدارس'),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildSummaryCard(
-                              'المعروض حالياً',
-                              '${_filteredTeachers.length}',
-                              Icons.visibility,
-                              Colors.green,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildSummaryCard(
-                              'إجمالي الحصص',
-                              '$_totalClassHours',
-                              Icons.schedule,
-                              Colors.orange,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildSummaryCard(
-                              'إجمالي الرواتب',
-                              '${_totalSalaries.toStringAsFixed(2)} د.ع',
-                              Icons.monetization_on,
-                              Colors.purple,
+                          ..._schools.map(
+                            (school) => ComboBoxItem<int?>(
+                              value: school.id,
+                              child: Text(school.nameAr),
                             ),
                           ),
                         ],
+                        onChanged: (value) {
+                          setState(() => _selectedSchoolId = value);
+                          _applyFilters();
+                        },
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // حقل البحث: اسم المعلم
+                SizedBox(
+                  width: 250,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('ابحث'),
                       const SizedBox(height: 8),
-                      Text(
-                        'آخر تحديث: ${DateTime.now().toString().split('.')[0]}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
+                      TextBox(
+                        controller: _searchController,
+                        placeholder: 'اسم المعلم',
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.search),
+                          onPressed: _applyFilters,
                         ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                          _applyFilters();
+                        },
                       ),
                     ],
                   ),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildSummaryCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Button(
+          onPressed: _clearFilters,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.clear_filter, size: 16),
+              SizedBox(width: 8),
+              Text('مسح المرشح'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: _loadData,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.refresh, size: 16),
+              SizedBox(width: 8),
+              Text('تحديث'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        FilledButton(
+          onPressed: _showAddTeacherDialog,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.add, size: 16),
+              SizedBox(width: 8),
+              Text('إضافة معلم'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTeachersTable() {
+    if (_isLoading) {
+      return const Center(child: ProgressRing());
+    }
+
+    if (_filteredTeachers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(FluentIcons.people, size: 64, color: Colors.grey[120]),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد معلمين',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[120],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'لم يتم العثور على معلمين يطابقون معايير البحث المحددة',
+              style: TextStyle(fontSize: 14, color: Colors.grey[100]),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
+          // رأس الجدول
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue.light,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: const Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    'تسلسل',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'الاسم',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'المدرسة',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'عدد الحصص',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'الراتب الشهري',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'رقم الهاتف',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    'ملاحظات',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'إجراءات',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-            textAlign: TextAlign.center,
+
+          // صفوف البيانات
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredTeachers.length,
+              itemBuilder: (context, index) {
+                final teacher = _filteredTeachers[index];
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.grey[50])),
+                  ),
+                  child: Row(
+                    children: [
+                      // تسلسل
+                      Expanded(flex: 1, child: Text('${index + 1}')),
+                      // الاسم
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          teacher.name,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      // المدرسة
+                      Expanded(
+                        flex: 3,
+                        child: Text(_getSchoolName(teacher.schoolId)),
+                      ),
+                      // عدد الحصص
+                      Expanded(
+                        flex: 2,
+                        child: Text('${teacher.classHours}'),
+                      ),
+                      // الراتب الشهري
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          '${NumberFormat('#,###').format(teacher.monthlySalary)} د.ع',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.dark,
+                          ),
+                        ),
+                      ),
+                      // رقم الهاتف
+                      Expanded(
+                        flex: 2,
+                        child: Text(teacher.phone ?? '-'),
+                      ),
+                      // ملاحظات
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          teacher.notes ?? '-',
+                          style: TextStyle(
+                            color: Colors.grey[120],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      // إجراءات
+                      Expanded(
+                        flex: 2,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                FluentIcons.edit,
+                                color: Colors.blue.dark,
+                              ),
+                              onPressed: () => _showEditTeacherDialog(teacher),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: Icon(
+                                FluentIcons.delete,
+                                color: Colors.red.dark,
+                              ),
+                              onPressed: () => _showDeleteConfirmation(teacher),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummarySection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'ملخص المعلمين المعروضين',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'عدد المعلمين: ${_filteredTeachers.length} معلم',
+                style: TextStyle(fontSize: 14, color: Colors.grey[120]),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.orange.light, Colors.orange.dark],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'إجمالي الحصص',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$_totalClassHours حصة',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.light, Colors.green.dark],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'إجمالي الرواتب',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${NumberFormat('#,###').format(_totalSalaries)} د.ع',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
