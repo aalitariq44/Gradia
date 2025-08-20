@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // زيادة رقم الإصدار
+      version: 3, // زيادة رقم الإصدار
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -63,6 +63,60 @@ class DatabaseHelper {
 
       // إعادة تسمية الجدول الجديد
       await db.execute('ALTER TABLE schools_new RENAME TO schools');
+    }
+
+    if (oldVersion < 3) {
+      // ترقية من الإصدار 2 إلى 3 - تحديث جدول الطلاب
+
+      // إنشاء جدول جديد بالهيكلية المطلوبة
+      await db.execute('''
+        CREATE TABLE students_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          national_id_number TEXT,
+          school_id INTEGER NOT NULL,
+          grade TEXT NOT NULL,
+          section TEXT NOT NULL,
+          academic_year TEXT,
+          gender TEXT NOT NULL,
+          phone TEXT,
+          total_fee DECIMAL(10,2) NOT NULL,
+          start_date DATE NOT NULL,
+          status TEXT DEFAULT 'نشط',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // نسخ البيانات الموجودة من الجدول القديم إلى الجديد
+      await db.execute('''
+        INSERT INTO students_new (id, name, school_id, grade, section, gender, phone, total_fee, start_date, status, created_at, updated_at)
+        SELECT id, name, school_id, 
+               COALESCE(grade, 'الأول'),
+               COALESCE(class_section, 'أ'),
+               'ذكر',
+               parent_phone,
+               0.0,
+               enrollment_date,
+               CASE WHEN is_active = 1 THEN 'نشط' ELSE 'منقطع' END,
+               created_at,
+               updated_at
+        FROM students
+      ''');
+
+      // حذف الجدول القديم
+      await db.execute('DROP TABLE students');
+
+      // إعادة تسمية الجدول الجديد
+      await db.execute('ALTER TABLE students_new RENAME TO students');
+
+      // إعادة إنشاء الفهارس
+      await db.execute(
+        'CREATE INDEX idx_students_school_id ON students (school_id)',
+      );
+      await db.execute('CREATE INDEX idx_students_name ON students (name)');
+      await db.execute('CREATE INDEX idx_students_status ON students (status)');
     }
   }
 
@@ -102,19 +156,20 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE students (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        school_id INTEGER NOT NULL,
-        student_id TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
-        grade TEXT,
-        class_section TEXT,
-        parent_name TEXT,
-        parent_phone TEXT,
-        address TEXT,
-        enrollment_date TEXT NOT NULL,
-        is_active INTEGER DEFAULT 1,
-        created_at TEXT NOT NULL,
-        updated_at TEXT,
-        FOREIGN KEY (school_id) REFERENCES schools (id) ON DELETE CASCADE
+        national_id_number TEXT,
+        school_id INTEGER NOT NULL,
+        grade TEXT NOT NULL,
+        section TEXT NOT NULL,
+        academic_year TEXT,
+        gender TEXT NOT NULL,
+        phone TEXT,
+        total_fee DECIMAL(10,2) NOT NULL,
+        start_date DATE NOT NULL,
+        status TEXT DEFAULT 'نشط',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
       )
     ''');
 
@@ -158,9 +213,8 @@ class DatabaseHelper {
     await db.execute(
       'CREATE INDEX idx_students_school_id ON students (school_id)',
     );
-    await db.execute(
-      'CREATE INDEX idx_students_student_id ON students (student_id)',
-    );
+    await db.execute('CREATE INDEX idx_students_name ON students (name)');
+    await db.execute('CREATE INDEX idx_students_status ON students (status)');
     await db.execute(
       'CREATE INDEX idx_installments_student_id ON installments (student_id)',
     );

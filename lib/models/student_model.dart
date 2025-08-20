@@ -1,30 +1,32 @@
 class Student {
   final int? id;
-  final int schoolId;
-  final String studentId;
   final String name;
+  final String? nationalIdNumber;
+  final int schoolId;
   final String grade;
-  final String classSection;
-  final String parentName;
-  final String parentPhone;
-  final String address;
-  final DateTime enrollmentDate;
-  final bool isActive;
+  final String section;
+  final String? academicYear;
+  final String gender;
+  final String? phone;
+  final double totalFee;
+  final DateTime startDate;
+  final String status;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
   Student({
     this.id,
-    required this.schoolId,
-    required this.studentId,
     required this.name,
-    this.grade = '',
-    this.classSection = '',
-    this.parentName = '',
-    this.parentPhone = '',
-    this.address = '',
-    required this.enrollmentDate,
-    this.isActive = true,
+    this.nationalIdNumber,
+    required this.schoolId,
+    required this.grade,
+    required this.section,
+    this.academicYear,
+    required this.gender,
+    this.phone,
+    required this.totalFee,
+    required this.startDate,
+    this.status = 'نشط',
     required this.createdAt,
     this.updatedAt,
   });
@@ -32,16 +34,17 @@ class Student {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'school_id': schoolId,
-      'student_id': studentId,
       'name': name,
+      'national_id_number': nationalIdNumber,
+      'school_id': schoolId,
       'grade': grade,
-      'class_section': classSection,
-      'parent_name': parentName,
-      'parent_phone': parentPhone,
-      'address': address,
-      'enrollment_date': enrollmentDate.toIso8601String(),
-      'is_active': isActive ? 1 : 0,
+      'section': section,
+      'academic_year': academicYear,
+      'gender': gender,
+      'phone': phone,
+      'total_fee': totalFee,
+      'start_date': startDate.toIso8601String(),
+      'status': status,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
@@ -50,16 +53,17 @@ class Student {
   factory Student.fromMap(Map<String, dynamic> map) {
     return Student(
       id: map['id']?.toInt(),
-      schoolId: map['school_id']?.toInt() ?? 0,
-      studentId: map['student_id'] ?? '',
       name: map['name'] ?? '',
+      nationalIdNumber: map['national_id_number'],
+      schoolId: map['school_id']?.toInt() ?? 0,
       grade: map['grade'] ?? '',
-      classSection: map['class_section'] ?? '',
-      parentName: map['parent_name'] ?? '',
-      parentPhone: map['parent_phone'] ?? '',
-      address: map['address'] ?? '',
-      enrollmentDate: DateTime.parse(map['enrollment_date']),
-      isActive: (map['is_active'] ?? 1) == 1,
+      section: map['section'] ?? '',
+      academicYear: map['academic_year'],
+      gender: map['gender'] ?? '',
+      phone: map['phone'],
+      totalFee: (map['total_fee'] as num?)?.toDouble() ?? 0.0,
+      startDate: DateTime.parse(map['start_date']),
+      status: map['status'] ?? 'نشط',
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'])
@@ -69,31 +73,33 @@ class Student {
 
   Student copyWith({
     int? id,
-    int? schoolId,
-    String? studentId,
     String? name,
+    String? nationalIdNumber,
+    int? schoolId,
     String? grade,
-    String? classSection,
-    String? parentName,
-    String? parentPhone,
-    String? address,
-    DateTime? enrollmentDate,
-    bool? isActive,
+    String? section,
+    String? academicYear,
+    String? gender,
+    String? phone,
+    double? totalFee,
+    DateTime? startDate,
+    String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
     return Student(
       id: id ?? this.id,
-      schoolId: schoolId ?? this.schoolId,
-      studentId: studentId ?? this.studentId,
       name: name ?? this.name,
+      nationalIdNumber: nationalIdNumber ?? this.nationalIdNumber,
+      schoolId: schoolId ?? this.schoolId,
       grade: grade ?? this.grade,
-      classSection: classSection ?? this.classSection,
-      parentName: parentName ?? this.parentName,
-      parentPhone: parentPhone ?? this.parentPhone,
-      address: address ?? this.address,
-      enrollmentDate: enrollmentDate ?? this.enrollmentDate,
-      isActive: isActive ?? this.isActive,
+      section: section ?? this.section,
+      academicYear: academicYear ?? this.academicYear,
+      gender: gender ?? this.gender,
+      phone: phone ?? this.phone,
+      totalFee: totalFee ?? this.totalFee,
+      startDate: startDate ?? this.startDate,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -101,7 +107,7 @@ class Student {
 
   @override
   String toString() {
-    return 'Student(id: $id, schoolId: $schoolId, studentId: $studentId, name: $name, grade: $grade, classSection: $classSection, parentName: $parentName, parentPhone: $parentPhone, address: $address, enrollmentDate: $enrollmentDate, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Student(id: $id, name: $name, nationalIdNumber: $nationalIdNumber, schoolId: $schoolId, grade: $grade, section: $section, academicYear: $academicYear, gender: $gender, phone: $phone, totalFee: $totalFee, startDate: $startDate, status: $status, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -109,16 +115,17 @@ class Student {
     if (identical(this, other)) return true;
     return other is Student &&
         other.id == id &&
-        other.schoolId == schoolId &&
-        other.studentId == studentId &&
         other.name == name &&
+        other.nationalIdNumber == nationalIdNumber &&
+        other.schoolId == schoolId &&
         other.grade == grade &&
-        other.classSection == classSection &&
-        other.parentName == parentName &&
-        other.parentPhone == parentPhone &&
-        other.address == address &&
-        other.enrollmentDate == enrollmentDate &&
-        other.isActive == isActive &&
+        other.section == section &&
+        other.academicYear == academicYear &&
+        other.gender == gender &&
+        other.phone == phone &&
+        other.totalFee == totalFee &&
+        other.startDate == startDate &&
+        other.status == status &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
@@ -126,16 +133,17 @@ class Student {
   @override
   int get hashCode {
     return id.hashCode ^
-        schoolId.hashCode ^
-        studentId.hashCode ^
         name.hashCode ^
+        nationalIdNumber.hashCode ^
+        schoolId.hashCode ^
         grade.hashCode ^
-        classSection.hashCode ^
-        parentName.hashCode ^
-        parentPhone.hashCode ^
-        address.hashCode ^
-        enrollmentDate.hashCode ^
-        isActive.hashCode ^
+        section.hashCode ^
+        academicYear.hashCode ^
+        gender.hashCode ^
+        phone.hashCode ^
+        totalFee.hashCode ^
+        startDate.hashCode ^
+        status.hashCode ^
         createdAt.hashCode ^
         updatedAt.hashCode;
   }
