@@ -405,7 +405,7 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                                           ),
                                         ),
                                         child: Row(
-                                          children: const [
+                                          children: [
                                             Expanded(
                                               flex: 2,
                                               child: Text(
@@ -455,6 +455,15 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                                               flex: 3,
                                               child: Text(
                                                 'الملاحظات',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 1,
+                                              child: Text(
+                                                'حذف',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -536,6 +545,20 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                                                         TextOverflow.ellipsis,
                                                   ),
                                                 ),
+                                                Expanded(
+                                                  flex: 1,
+                                                  child: IconButton(
+                                                    icon: Icon(
+                                                      FluentIcons.delete,
+                                                      color: Colors.red,
+                                                      size: 16,
+                                                    ),
+                                                    onPressed: () =>
+                                                        _showDeleteConfirmation(
+                                                          installment,
+                                                        ),
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           );
@@ -552,6 +575,49 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
               ),
       ),
     );
+  }
+
+  /// عرض مربع حوار لتأكيد حذف الوصل
+  void _showDeleteConfirmation(Installment installment) {
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد أنك تريد حذف الوصل رقم ${installment.id}?'),
+        actions: [
+          Button(
+            child: const Text('إلغاء'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          FilledButton(
+            child: const Text('حذف'),
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteInstallment(installment.id!);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// حذف الوصل واستعادة البيانات
+  Future<void> _deleteInstallment(int id) async {
+    try {
+      await _installmentService.deleteInstallment(id);
+      _loadData();
+      displayInfoBar(
+        context,
+        builder: (context, close) => InfoBar(
+          title: const Text('تم الحذف'),
+          content: const Text('تم حذف الوصل بنجاح'),
+          severity: InfoBarSeverity.success,
+          onClose: close,
+        ),
+      );
+    } catch (e) {
+      _showErrorDialog('خطأ في حذف الوصل: $e');
+    }
   }
 
   Widget _buildInfoItem(String label, String value) {
