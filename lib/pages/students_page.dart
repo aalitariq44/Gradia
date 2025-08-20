@@ -6,6 +6,7 @@ import '../models/school_model.dart';
 import '../services/student_service.dart';
 import '../services/school_service.dart';
 import './student_details_page.dart';
+import './edit_student_dialog.dart';
 
 class StudentsPage extends StatefulWidget {
   const StudentsPage({Key? key}) : super(key: key);
@@ -173,6 +174,19 @@ class _StudentsPageState extends State<StudentsPage> {
       builder: (context) => AddStudentDialog(
         schools: _schools,
         onStudentAdded: () {
+          _loadData();
+        },
+      ),
+    );
+  }
+
+  void _showEditStudentDialog(Student student) {
+    showDialog(
+      context: context,
+      builder: (context) => EditStudentDialog(
+        student: student,
+        schools: _schools,
+        onStudentUpdated: () {
           _loadData();
         },
       ),
@@ -624,11 +638,9 @@ class _StudentsPageState extends State<StudentsPage> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
+                                                            IconButton(
                                 icon: const Icon(FluentIcons.edit, size: 16),
-                                onPressed: () {
-                                  // TODO: تنفيذ التعديل
-                                },
+                                onPressed: () => _showEditStudentDialog(student),
                               ),
                               IconButton(
                                 icon: Icon(
