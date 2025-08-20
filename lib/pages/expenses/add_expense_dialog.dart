@@ -1,10 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../../core/services/expense_service.dart';
-import '../../core/services/school_service.dart';
-import '../../core/services/migration_service.dart';
-import '../../core/database/models/school_model.dart';
+import '../../services/expense_service.dart';
+import '../../services/school_service.dart';
+import '../../models/school_model.dart';
 import '../../models/expense_model.dart';
 
 class AddExpenseDialog extends StatefulWidget {
@@ -18,6 +17,9 @@ class AddExpenseDialog extends StatefulWidget {
 
 class _AddExpenseDialogState extends State<AddExpenseDialog> {
   final _formKey = GlobalKey<FormState>();
+  
+  final ExpenseService _expenseService = ExpenseService();
+  final SchoolService _schoolService = SchoolService();
 
   // Form controllers
   final TextEditingController _descriptionController = TextEditingController();
@@ -30,7 +32,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   DateTime _selectedDate = DateTime.now();
 
   // Data
-  List<SchoolModel> _schools = [];
+  List<School> _schools = [];
   bool _isLoading = false;
   bool _isSaving = false;
 
@@ -65,15 +67,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
   Future<void> _loadSchools() async {
     setState(() => _isLoading = true);
     try {
-      // التحقق من وجود مدارس في قاعدة البيانات الجديدة
-      final hasSchools = await MigrationService.hasSchoolsInNewDatabase();
-
-      // إذا لم توجد مدارس، قم بنقلها من قاعدة البيانات القديمة
-      if (!hasSchools) {
-        await MigrationService.migrateSchoolsFromOldToNew();
-      }
-
-      final schools = await SchoolService.getAllSchools();
+      final schools = await _schoolService.getAllSchools();
       setState(() {
         _schools = schools;
         _isLoading = false;
@@ -116,10 +110,10 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
 
       if (widget.expense == null) {
         // Create new expense
-        await ExpenseService.createExpense(expense);
+        await _expenseService.addExpense(expense);
       } else {
         // Update existing expense
-        await ExpenseService.updateExpense(expense);
+        await _expenseService.updateExpense(expense);
       }
 
       if (mounted) {
@@ -225,7 +219,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                           items: _schools
                               .map(
                                 (school) => ComboBoxItem<int>(
-                                  value: school.id!,
+                                  value: school.id ?? 0,
                                   child: Text(school.nameAr),
                                 ),
                               )

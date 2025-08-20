@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6, // زيادة رقم الإصدار لإضافة جداول المعلمين والموظفين
+      version: 7, // زيادة رقم الإصدار لإضافة الدخل الخارجي والمصروفات
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -221,6 +221,66 @@ class DatabaseHelper {
         'CREATE INDEX idx_employees_job_type ON employees (job_type)',
       );
     }
+
+    if (oldVersion < 7) {
+      // ترقية من الإصدار 6 إلى 7 - إضافة جداول الدخل الخارجي والمصروفات
+
+      // إنشاء جدول الدخل الخارجي
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS external_income (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          school_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          category TEXT NOT NULL,
+          income_type TEXT NOT NULL,
+          description TEXT,
+          income_date DATE NOT NULL,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // إنشاء جدول المصروفات
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS expenses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          school_id INTEGER NOT NULL,
+          expense_type TEXT NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          expense_date DATE NOT NULL,
+          description TEXT,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // إنشاء فهارس للدخل الخارجي
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_external_income_school_id ON external_income(school_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_external_income_category ON external_income(category)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_external_income_date ON external_income(income_date)',
+      );
+
+      // إنشاء فهارس للمصروفات
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_expenses_school_id ON expenses(school_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(expense_type)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date)',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -339,6 +399,40 @@ class DatabaseHelper {
       )
     ''');
 
+    // إنشاء جدول الدخل الخارجي
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS external_income (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        school_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        category TEXT NOT NULL,
+        income_type TEXT NOT NULL,
+        description TEXT,
+        income_date DATE NOT NULL,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // إنشاء جدول المصروفات
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        school_id INTEGER NOT NULL,
+        expense_type TEXT NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        expense_date DATE NOT NULL,
+        description TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+      )
+    ''');
+
     // إنشاء فهارس للبحث السريع
     await db.execute(
       'CREATE INDEX idx_students_school_id ON students (school_id)',
@@ -367,6 +461,28 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_employees_name ON employees (name)');
     await db.execute(
       'CREATE INDEX idx_employees_job_type ON employees (job_type)',
+    );
+
+    // إنشاء فهارس للدخل الخارجي
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_external_income_school_id ON external_income(school_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_external_income_category ON external_income(category)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_external_income_date ON external_income(income_date)',
+    );
+
+    // إنشاء فهارس للمصروفات
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_school_id ON expenses(school_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(expense_type)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date)',
     );
 
     // إدراج مستخدم افتراضي (admin/admin123)

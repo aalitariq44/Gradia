@@ -1,5 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import '../../../core/database/models/school_model.dart';
+import '../../../models/school_model.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../../utils/constants.dart';
@@ -36,7 +36,7 @@ class _AddSchoolDialogState extends State<AddSchoolDialog> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       final now = DateTime.now();
-      final school = SchoolModel(
+      final school = School(
         nameAr: _nameArController.text.trim(),
         nameEn: _nameEnController.text.trim().isEmpty
             ? null
@@ -50,7 +50,7 @@ class _AddSchoolDialogState extends State<AddSchoolDialog> {
         principalName: _principalNameController.text.trim().isEmpty
             ? null
             : _principalNameController.text.trim(),
-        schoolTypes: _selectedSchoolType,
+        schoolTypes: [_selectedSchoolType],
         createdAt: now,
         updatedAt: now,
       );

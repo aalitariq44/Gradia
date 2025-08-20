@@ -1,10 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../../core/services/expense_service.dart';
-import '../../core/services/school_service.dart';
-import '../../core/services/migration_service.dart';
-import '../../core/database/models/school_model.dart';
+import '../../services/expense_service.dart';
+import '../../services/school_service.dart';
+import '../../models/school_model.dart';
 import '../../models/expense_model.dart';
 import 'add_expense_dialog.dart';
 
@@ -18,7 +17,10 @@ class ExpensesPage extends StatefulWidget {
 class _ExpensesPageState extends State<ExpensesPage> {
   List<ExpenseModel> _allExpenses = [];
   List<ExpenseModel> _filteredExpenses = [];
-  List<SchoolModel> _schools = [];
+  List<School> _schools = [];
+  
+  final ExpenseService _expenseService = ExpenseService();
+  final SchoolService _schoolService = SchoolService();
   bool _isLoading = true;
 
   // Filter controllers
@@ -28,8 +30,24 @@ class _ExpensesPageState extends State<ExpensesPage> {
   DateTime? _startDate;
   DateTime? _endDate;
 
-  // Statistics
-  Map<String, dynamic> _statistics = {};
+  double get _monthlyAmount {
+    final now = DateTime.now();
+    final currentMonth = DateTime(now.year, now.month);
+    final nextMonth = DateTime(now.year, now.month + 1);
+    
+    return _allExpenses
+        .where((expense) => 
+            expense.expenseDate.isAfter(currentMonth.subtract(const Duration(days: 1))) &&
+            expense.expenseDate.isBefore(nextMonth))
+        .fold(0.0, (sum, expense) => sum + expense.amount);
+  }
+
+  double get _yearlyAmount {
+    final now = DateTime.now();
+    return _allExpenses
+        .where((expense) => expense.expenseDate.year == now.year)
+        .fold(0.0, (sum, expense) => sum + expense.amount);
+  }
 
   final DateFormat _displayDateFormatter = DateFormat('dd/MM/yyyy');
 
@@ -48,23 +66,13 @@ class _ExpensesPageState extends State<ExpensesPage> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      // التحقق من وجود مدارس في قاعدة البيانات الجديدة
-      final hasSchools = await MigrationService.hasSchoolsInNewDatabase();
-
-      // إذا لم توجد مدارس، قم بنقلها من قاعدة البيانات القديمة
-      if (!hasSchools) {
-        await MigrationService.migrateSchoolsFromOldToNew();
-      }
-
-      final expenses = await ExpenseService.getAllExpenses();
-      final schools = await SchoolService.getAllSchools();
-      final statistics = await ExpenseService.getExpenseStatistics();
+      final expenses = await _expenseService.getAllExpenses();
+      final schools = await _schoolService.getAllSchools();
 
       setState(() {
         _allExpenses = expenses;
         _filteredExpenses = expenses;
         _schools = schools;
-        _statistics = statistics;
         _isLoading = false;
       });
     } catch (e) {
@@ -76,15 +84,46 @@ class _ExpensesPageState extends State<ExpensesPage> {
   Future<void> _applyFilters() async {
     setState(() => _isLoading = true);
     try {
-      final filteredExpenses = await ExpenseService.advancedSearchExpenses(
-        searchQuery: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
-        schoolId: _selectedSchoolId,
-        expenseType: _selectedExpenseType,
-        startDate: _startDate,
-        endDate: _endDate,
-      );
+      List<ExpenseModel> filteredExpenses = _allExpenses;
+
+      // تطبيق فلتر البحث النصي
+      if (_searchController.text.trim().isNotEmpty) {
+        final searchQuery = _searchController.text.trim().toLowerCase();
+        filteredExpenses = filteredExpenses.where((expense) =>
+          expense.expenseType.toLowerCase().contains(searchQuery) ||
+          (expense.description?.toLowerCase().contains(searchQuery) ?? false) ||
+          (expense.notes?.toLowerCase().contains(searchQuery) ?? false)
+        ).toList();
+      }
+
+      // تطبيق فلتر المدرسة
+      if (_selectedSchoolId != null) {
+        filteredExpenses = filteredExpenses.where((expense) =>
+          expense.schoolId == _selectedSchoolId
+        ).toList();
+      }
+
+      // تطبيق فلتر نوع المصروف
+      if (_selectedExpenseType != null) {
+        filteredExpenses = filteredExpenses.where((expense) =>
+          expense.expenseType == _selectedExpenseType
+        ).toList();
+      }
+
+      // تطبيق فلتر التاريخ
+      if (_startDate != null) {
+        filteredExpenses = filteredExpenses.where((expense) =>
+          expense.expenseDate.isAfter(_startDate!) || 
+          expense.expenseDate.isAtSameMomentAs(_startDate!)
+        ).toList();
+      }
+      
+      if (_endDate != null) {
+        filteredExpenses = filteredExpenses.where((expense) =>
+          expense.expenseDate.isBefore(_endDate!) || 
+          expense.expenseDate.isAtSameMomentAs(_endDate!)
+        ).toList();
+      }
 
       setState(() {
         _filteredExpenses = filteredExpenses;
@@ -144,7 +183,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
 
     if (result == true) {
       try {
-        await ExpenseService.deleteExpense(expense.id!);
+        await _expenseService.deleteExpense(expense.id!);
         await _loadData();
         _showSuccessMessage('تم حذف المصروف بنجاح');
       } catch (e) {
@@ -235,7 +274,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
               Expanded(
                 child: _buildStatisticCard(
                   'إجمالي المصروفات (الشهر الحالي)',
-                  '${NumberFormat('#,##0.00').format(_statistics['monthlyAmount'] ?? 0)} د.ع',
+                  '${NumberFormat('#,##0.00').format(_monthlyAmount)} د.ع',
                   FluentIcons.calendar,
                   Colors.red,
                 ),
@@ -244,7 +283,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
               Expanded(
                 child: _buildStatisticCard(
                   'إجمالي المصروفات (العام الحالي)',
-                  '${NumberFormat('#,##0.00').format(_statistics['yearlyAmount'] ?? 0)} د.ع',
+                  '${NumberFormat('#,##0.00').format(_yearlyAmount)} د.ع',
                   FluentIcons.calendar,
                   Colors.red,
                 ),

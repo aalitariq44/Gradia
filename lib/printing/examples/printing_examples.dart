@@ -12,6 +12,7 @@ class ExamplePrintingPage extends StatefulWidget {
 
 class _ExamplePrintingPageState extends State<ExamplePrintingPage> {
   final PrintingService _printingService = PrintingService();
+  // ignore: unused_field
   final StudentPrintingService _studentPrintingService =
       StudentPrintingService();
 

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../core/services/external_income_service.dart';
-import '../core/services/school_service.dart';
-import '../core/database/models/external_income_model.dart';
-import '../core/database/models/school_model.dart';
+import '../services/external_income_service.dart';
+import '../services/school_service.dart';
+import '../models/external_income_model.dart';
+import '../models/school_model.dart';
 
 class EditExternalIncomeDialog extends StatefulWidget {
-  final ExternalIncomeModel income;
+  final ExternalIncome income;
 
   const EditExternalIncomeDialog({Key? key, required this.income})
     : super(key: key);
@@ -19,6 +19,9 @@ class EditExternalIncomeDialog extends StatefulWidget {
 
 class _EditExternalIncomeDialogState extends State<EditExternalIncomeDialog> {
   final _formKey = GlobalKey<FormState>();
+  
+  final ExternalIncomeService _externalIncomeService = ExternalIncomeService();
+  final SchoolService _schoolService = SchoolService();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
@@ -27,7 +30,7 @@ class _EditExternalIncomeDialogState extends State<EditExternalIncomeDialog> {
   int? _selectedSchoolId;
   String _selectedCategory = 'رسوم دراسية';
   DateTime _selectedDate = DateTime.now();
-  List<SchoolModel> _schools = [];
+  List<School> _schools = [];
   bool _isLoading = false;
   bool _isSubmitting = false;
 
@@ -74,7 +77,7 @@ class _EditExternalIncomeDialogState extends State<EditExternalIncomeDialog> {
   Future<void> _loadSchools() async {
     setState(() => _isLoading = true);
     try {
-      final schools = await SchoolService.getAllSchools();
+      final schools = await _schoolService.getAllSchools();
       setState(() {
         _schools = schools;
         _isLoading = false;
@@ -144,7 +147,7 @@ class _EditExternalIncomeDialogState extends State<EditExternalIncomeDialog> {
         updatedAt: DateTime.now(),
       );
 
-      await ExternalIncomeService.updateExternalIncome(updatedIncome);
+      await _externalIncomeService.updateExternalIncome(updatedIncome);
 
       if (mounted) {
         Navigator.of(context).pop(true);

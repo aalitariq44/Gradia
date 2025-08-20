@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../core/services/external_income_service.dart';
-import '../core/services/school_service.dart';
-import '../core/database/models/external_income_model.dart';
-import '../core/database/models/school_model.dart';
+import '../services/external_income_service.dart';
+import '../models/external_income_model.dart';
+import '../models/school_model.dart';
 
 class AddExternalIncomeDialog extends StatefulWidget {
-  final List<SchoolModel> schools;
+  final List<School> schools;
 
   const AddExternalIncomeDialog({Key? key, required this.schools}) : super(key: key);
 
@@ -19,6 +18,8 @@ class AddExternalIncomeDialog extends StatefulWidget {
 class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  
+  final ExternalIncomeService _externalIncomeService = ExternalIncomeService();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
@@ -96,7 +97,7 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
     setState(() => _isSubmitting = true);
 
     try {
-      final income = ExternalIncomeModel(
+      final income = ExternalIncome(
         schoolId: _selectedSchoolId!,
         title: _titleController.text.trim(),
         amount: double.parse(_amountController.text.trim()),
@@ -113,7 +114,7 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
         updatedAt: DateTime.now(),
       );
 
-      await ExternalIncomeService.createExternalIncome(income);
+      await _externalIncomeService.addExternalIncome(income);
 
       if (mounted) {
         Navigator.of(context).pop(true);

@@ -1,10 +1,10 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../core/services/external_income_service.dart';
-import '../core/services/school_service.dart';
-import '../core/database/models/external_income_model.dart';
-import '../core/database/models/school_model.dart';
+import '../services/external_income_service.dart';
+import '../services/school_service.dart';
+import '../models/external_income_model.dart';
+import '../models/school_model.dart';
 import 'add_external_income_dialog.dart';
 
 class ExternalIncomePage extends StatefulWidget {
@@ -15,10 +15,13 @@ class ExternalIncomePage extends StatefulWidget {
 }
 
 class _ExternalIncomePageState extends State<ExternalIncomePage> {
-  List<ExternalIncomeModel> _allIncomes = [];
-  List<ExternalIncomeModel> _filteredIncomes = [];
-  List<SchoolModel> _schools = [];
+  List<ExternalIncome> _allIncomes = [];
+  List<ExternalIncome> _filteredIncomes = [];
+  List<School> _schools = [];
   bool _isLoading = false;
+  
+  final ExternalIncomeService _externalIncomeService = ExternalIncomeService();
+  final SchoolService _schoolService = SchoolService();
 
   // Filter controllers
   final TextEditingController _searchController = TextEditingController();
@@ -62,15 +65,15 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
   }
 
   Future<void> _loadIncomes() async {
-    _allIncomes = await ExternalIncomeService.getAllExternalIncomes();
+    _allIncomes = await _externalIncomeService.getAllExternalIncomes();
   }
 
   Future<void> _loadSchools() async {
-    _schools = await SchoolService.getAllSchools();
+    _schools = await _schoolService.getAllSchools();
   }
 
   void _applyFilters() {
-    List<ExternalIncomeModel> filtered = List.from(_allIncomes);
+    List<ExternalIncome> filtered = List.from(_allIncomes);
 
     // تصفية حسب المدرسة
     if (_selectedSchoolId != null) {
@@ -243,7 +246,7 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
     }
   }
 
-  Future<void> _deleteIncome(ExternalIncomeModel income) async {
+  Future<void> _deleteIncome(ExternalIncome income) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => ContentDialog(
@@ -264,7 +267,7 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
 
     if (result == true) {
       try {
-        await ExternalIncomeService.deleteExternalIncome(income.id!);
+        await _externalIncomeService.deleteExternalIncome(income.id!);
         await _loadData();
       } catch (e) {
         print('خطأ في حذف الوارد: $e');

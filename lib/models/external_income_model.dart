@@ -1,4 +1,4 @@
-class ExternalIncomeModel {
+class ExternalIncome {
   final int? id;
   final int schoolId;
   final String title;
@@ -11,10 +11,7 @@ class ExternalIncomeModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  // Additional fields for UI display
-  final String? schoolName;
-
-  ExternalIncomeModel({
+  ExternalIncome({
     this.id,
     required this.schoolId,
     required this.title,
@@ -26,7 +23,6 @@ class ExternalIncomeModel {
     this.notes,
     required this.createdAt,
     required this.updatedAt,
-    this.schoolName,
   });
 
   Map<String, dynamic> toMap() {
@@ -45,8 +41,8 @@ class ExternalIncomeModel {
     };
   }
 
-  factory ExternalIncomeModel.fromMap(Map<String, dynamic> map) {
-    return ExternalIncomeModel(
+  factory ExternalIncome.fromMap(Map<String, dynamic> map) {
+    return ExternalIncome(
       id: map['id']?.toInt(),
       schoolId: map['school_id']?.toInt() ?? 0,
       title: map['title'] ?? '',
@@ -58,11 +54,10 @@ class ExternalIncomeModel {
       notes: map['notes'],
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
-      schoolName: map['school_name'],
     );
   }
 
-  ExternalIncomeModel copyWith({
+  ExternalIncome copyWith({
     int? id,
     int? schoolId,
     String? title,
@@ -74,9 +69,8 @@ class ExternalIncomeModel {
     String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
-    String? schoolName,
   }) {
-    return ExternalIncomeModel(
+    return ExternalIncome(
       id: id ?? this.id,
       schoolId: schoolId ?? this.schoolId,
       title: title ?? this.title,
@@ -88,26 +82,29 @@ class ExternalIncomeModel {
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      schoolName: schoolName ?? this.schoolName,
     );
   }
 
   @override
   String toString() {
-    return 'ExternalIncomeModel{id: $id, schoolId: $schoolId, title: $title, amount: $amount, category: $category, incomeType: $incomeType, incomeDate: $incomeDate}';
+    return 'ExternalIncome(id: $id, schoolId: $schoolId, title: $title, amount: $amount, category: $category, incomeType: $incomeType, description: $description, incomeDate: $incomeDate, notes: $notes, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is ExternalIncomeModel &&
+    return other is ExternalIncome &&
         other.id == id &&
         other.schoolId == schoolId &&
         other.title == title &&
         other.amount == amount &&
         other.category == category &&
         other.incomeType == incomeType &&
-        other.incomeDate == incomeDate;
+        other.description == description &&
+        other.incomeDate == incomeDate &&
+        other.notes == notes &&
+        other.createdAt == createdAt &&
+        other.updatedAt == updatedAt;
   }
 
   @override
@@ -118,6 +115,10 @@ class ExternalIncomeModel {
         amount.hashCode ^
         category.hashCode ^
         incomeType.hashCode ^
-        incomeDate.hashCode;
+        description.hashCode ^
+        incomeDate.hashCode ^
+        notes.hashCode ^
+        createdAt.hashCode ^
+        updatedAt.hashCode;
   }
 }
