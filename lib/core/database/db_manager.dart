@@ -23,7 +23,7 @@ class DbManager {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -129,6 +129,22 @@ class DbManager {
       )
     ''');
 
+    // Create expenses table
+    await db.execute('''
+      CREATE TABLE expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        school_id INTEGER NOT NULL,
+        expense_type TEXT NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        expense_date DATE NOT NULL,
+        description TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute(
       'CREATE INDEX idx_external_income_school_id ON external_income(school_id)',
@@ -138,6 +154,15 @@ class DbManager {
     );
     await db.execute(
       'CREATE INDEX idx_external_income_date ON external_income(income_date)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_expenses_school_id ON expenses(school_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_expenses_type ON expenses(expense_type)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_expenses_date ON expenses(expense_date)',
     );
     await db.execute(
       'CREATE INDEX idx_additional_fees_student_id ON additional_fees(student_id)',
@@ -195,6 +220,35 @@ class DbManager {
       );
       await db.execute(
         'CREATE INDEX idx_additional_fees_paid ON additional_fees(paid)',
+      );
+    }
+
+    if (oldVersion < 3) {
+      // Add expenses table for version 3
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS expenses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          school_id INTEGER NOT NULL,
+          expense_type TEXT NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          expense_date DATE NOT NULL,
+          description TEXT,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Create indexes for expenses table
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_expenses_school_id ON expenses(school_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(expense_type)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date)',
       );
     }
   }

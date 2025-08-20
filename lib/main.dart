@@ -8,6 +8,7 @@ import 'pages/additional_fees_page.dart';
 import 'pages/teachers_page.dart';
 import 'pages/employees_page.dart';
 import 'pages/external_income_page.dart';
+import 'pages/expenses/expenses_page.dart';
 import 'pages/font_demo_page.dart';
 import 'utils/font_config.dart';
 
@@ -99,7 +100,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       PaneItem(
         icon: const Icon(FluentIcons.receipt_processing),
         title: const Text('المصروفات'),
-        body: Center(child: const Text('صفحة المصروفات قيد التطوير')),
+        body: const ExpensesPage(),
       ),
       PaneItem(
         icon: const Icon(FluentIcons.money),
