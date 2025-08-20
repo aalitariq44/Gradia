@@ -7,6 +7,7 @@ import 'pages/tuitions_page.dart';
 import 'pages/additional_fees_page.dart';
 import 'pages/teachers_page.dart';
 import 'pages/employees_page.dart';
+import 'pages/external_income_page.dart';
 import 'pages/font_demo_page.dart';
 import 'utils/font_config.dart';
 
@@ -93,7 +94,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       PaneItem(
         icon: const Icon(FluentIcons.import),
         title: const Text('الواردات الخارجية'),
-        body: Center(child: const Text('صفحة الواردات الخارجية قيد التطوير')),
+        body: const ExternalIncomePage(),
       ),
       PaneItem(
         icon: const Icon(FluentIcons.receipt_processing),

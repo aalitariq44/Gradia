@@ -21,7 +21,12 @@ class DbManager {
   static Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'gradia_school_management.db');
 
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   static Future<void> _onCreate(Database db, int version) async {
@@ -106,6 +111,41 @@ class DbManager {
       )
     ''');
 
+    // Create external_income table
+    await db.execute('''
+      CREATE TABLE external_income (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        school_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        category TEXT NOT NULL,
+        income_type TEXT NOT NULL,
+        description TEXT,
+        income_date DATE NOT NULL,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Create indexes for better performance
+    await db.execute(
+      'CREATE INDEX idx_external_income_school_id ON external_income(school_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_external_income_category ON external_income(category)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_external_income_date ON external_income(income_date)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_additional_fees_student_id ON additional_fees(student_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_additional_fees_paid ON additional_fees(paid)',
+    );
+
     // Insert default admin user (password: admin123)
     await db.insert('users', {
       'username': 'admin',
@@ -114,6 +154,49 @@ class DbManager {
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
     });
+  }
+
+  static Future<void> _onUpgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2) {
+      // Add external_income table for version 2
+      await db.execute('''
+        CREATE TABLE external_income (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          school_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          category TEXT NOT NULL,
+          income_type TEXT NOT NULL,
+          description TEXT,
+          income_date DATE NOT NULL,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // Create indexes for better performance
+      await db.execute(
+        'CREATE INDEX idx_external_income_school_id ON external_income(school_id)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_external_income_category ON external_income(category)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_external_income_date ON external_income(income_date)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_additional_fees_student_id ON additional_fees(student_id)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_additional_fees_paid ON additional_fees(paid)',
+      );
+    }
   }
 
   static Future<void> close() async {
