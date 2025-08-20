@@ -4,7 +4,7 @@ import 'package:flutter/material.dart' hide Colors;
 import 'generated/app_localizations.dart';
 import 'pages/schools_page.dart';
 import 'pages/students_page.dart';
-import 'pages/tuitions_page.dart';
+import 'pages/Installments_page.dart';
 import 'pages/additional_fees_page.dart';
 import 'pages/teachers_page.dart';
 import 'pages/employees_page.dart';
