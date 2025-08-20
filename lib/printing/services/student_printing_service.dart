@@ -19,6 +19,7 @@ class StudentPrintingService {
     required List<Student> students,
     required List<School> schools,
     Map<String, dynamic>? filters,
+    List<String>? columnsToShow,
     bool showPreview = true,
   }) async {
     // تحويل بيانات الطلاب إلى تنسيق قابل للطباعة
@@ -35,8 +36,8 @@ class StudentPrintingService {
       orientation: 'portrait', // تغيير إلى عمودي كما طلب المستخدم
       fontSize: 9.0,
       headerFontSize: 16.0,
-      columnHeaders: _getStudentColumnHeaders(),
-      columnsToShow: _getDefaultColumns(), // الأعمدة الافتراضية
+      columnHeaders: getStudentColumnHeaders(),
+      columnsToShow: columnsToShow ?? _getDefaultColumns(), // الأعمدة الافتراضية
     );
 
     await _printingService.printTable(
@@ -75,7 +76,7 @@ class StudentPrintingService {
   }
 
   /// الحصول على جميع رؤوس الأعمدة المتاحة
-  Map<String, String> _getAllColumnHeaders() {
+  Map<String, String> getAllColumnHeaders() {
     return {
       'index': '#',
       'name': 'اسم الطالب',
@@ -172,7 +173,7 @@ class StudentPrintingService {
   }
 
   /// رؤوس أعمدة جدول الطلاب
-  Map<String, String> _getStudentColumnHeaders() {
+  Map<String, String> getStudentColumnHeaders() {
     return {
       'index': '#',
       'name': 'اسم الطالب',
@@ -329,6 +330,7 @@ class StudentPrintingService {
     required List<Student> students,
     required List<School> schools,
     Map<String, dynamic>? filters,
+    List<String>? columnsToShow,
   }) async {
     final printData = _convertStudentsToTableData(students, schools);
     final title = _generateTitle(filters);
@@ -340,8 +342,8 @@ class StudentPrintingService {
       orientation: 'portrait',
       fontSize: 9.0,
       headerFontSize: 16.0,
-      columnHeaders: _getStudentColumnHeaders(),
-      columnsToShow: _getDefaultColumns(),
+      columnHeaders: getStudentColumnHeaders(),
+      columnsToShow: columnsToShow ?? _getDefaultColumns(),
     );
 
     return await _printingService.generatePdfBytes(

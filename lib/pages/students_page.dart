@@ -760,40 +760,96 @@ class _StudentsPageState extends State<StudentsPage> {
       return;
     }
 
+    final allColumns = _printingService.getAllColumnHeaders();
+    List<String> selectedColumns = _printingService.getStudentColumnHeaders().keys.toList();
+
     await showDialog(
-        context: context,
-        builder: (context) {
-          return ContentDialog(
-            title: const Text('اختر إجراء'),
-            content:
-                const Text('اختر ما إذا كنت تريد الطباعة مباشرة أو المعاينة.'),
-            actions: [
-              Button(
-                child: const Text('إلغاء'),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return ContentDialog(
+              title: const Text('طباعة قائمة الطلاب'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('اختر الأعمدة للطباعة:'),
+                  const SizedBox(height: 16),
+                  Checkbox(
+                    content: const Text('تحديد الكل'),
+                    checked: selectedColumns.length == allColumns.length,
+                    onChanged: (checked) {
+                      setState(() {
+                        if (checked ?? false) {
+                          selectedColumns = allColumns.keys.toList();
+                        } else {
+                          selectedColumns = [];
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    children: allColumns.entries.map((entry) {
+                      return Checkbox(
+                        content: Text(entry.value),
+                        checked: selectedColumns.contains(entry.key),
+                        onChanged: (checked) {
+                          setState(() {
+                            if (checked ?? false) {
+                              selectedColumns.add(entry.key);
+                            } else {
+                              selectedColumns.remove(entry.key);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
-              FilledButton(
-                child: const Text('طباعة'),
-                onPressed: () {
-                  Navigator.pop(context);
-                  _executePrint(showExternalPreview: false);
-                },
-              ),
-              FilledButton(
-                child: const Text('معاينة في متصفح خارجي'),
-                onPressed: () {
-                  Navigator.pop(context);
-                  _executePrint(showExternalPreview: true);
-                },
-              ),
-            ],
-          );
-        });
+              actions: [
+                Button(
+                  child: const Text('إلغاء'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                FilledButton(
+                  child: const Text('طباعة'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _executePrint(
+                      showExternalPreview: false,
+                      columnsToShow: selectedColumns,
+                    );
+                  },
+                ),
+                FilledButton(
+                  child: const Text('معاينة في متصفح خارجي'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _executePrint(
+                      showExternalPreview: true,
+                      columnsToShow: selectedColumns,
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
-  Future<void> _executePrint({required bool showExternalPreview}) async {
+  Future<void> _executePrint({
+    required bool showExternalPreview,
+    required List<String> columnsToShow,
+  }) async {
     try {
       // إنشاء معلومات التصفية المطبقة
       final filters = <String, dynamic>{};
@@ -829,12 +885,14 @@ class _StudentsPageState extends State<StudentsPage> {
           students: _filteredStudents,
           schools: _schools,
           filters: filters,
+          columnsToShow: columnsToShow,
         );
       } else {
         final pdfBytes = await _printingService.generateStudentsListPdf(
           students: _filteredStudents,
           schools: _schools,
           filters: filters,
+          columnsToShow: columnsToShow,
         );
 
         final tempDir = await getTemporaryDirectory();
