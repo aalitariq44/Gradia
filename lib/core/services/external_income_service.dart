@@ -6,7 +6,7 @@ class ExternalIncomeService {
   static Future<List<ExternalIncomeModel>> getAllExternalIncomes() async {
     final db = await DbManager.database;
     final result = await db.rawQuery('''
-      SELECT ei.*, s.name as school_name
+      SELECT ei.*, s.name_ar as school_name
       FROM external_income ei
       LEFT JOIN schools s ON ei.school_id = s.id
       ORDER BY ei.income_date DESC, ei.created_at DESC
@@ -19,7 +19,7 @@ class ExternalIncomeService {
     final db = await DbManager.database;
     final result = await db.rawQuery(
       '''
-      SELECT ei.*, s.name as school_name
+      SELECT ei.*, s.name_ar as school_name
       FROM external_income ei
       LEFT JOIN schools s ON ei.school_id = s.id
       WHERE ei.id = ?
@@ -40,7 +40,7 @@ class ExternalIncomeService {
     final db = await DbManager.database;
     final result = await db.rawQuery(
       '''
-      SELECT ei.*, s.name as school_name
+      SELECT ei.*, s.name_ar as school_name
       FROM external_income ei
       LEFT JOIN schools s ON ei.school_id = s.id
       WHERE ei.school_id = ?
@@ -58,7 +58,7 @@ class ExternalIncomeService {
     final db = await DbManager.database;
     final result = await db.rawQuery(
       '''
-      SELECT ei.*, s.name as school_name
+      SELECT ei.*, s.name_ar as school_name
       FROM external_income ei
       LEFT JOIN schools s ON ei.school_id = s.id
       WHERE ei.category = ?
@@ -77,7 +77,7 @@ class ExternalIncomeService {
     final db = await DbManager.database;
     final result = await db.rawQuery(
       '''
-      SELECT ei.*, s.name as school_name
+      SELECT ei.*, s.name_ar as school_name
       FROM external_income ei
       LEFT JOIN schools s ON ei.school_id = s.id
       WHERE ei.income_date >= ? AND ei.income_date <= ?
@@ -98,11 +98,11 @@ class ExternalIncomeService {
     final db = await DbManager.database;
     final result = await db.rawQuery(
       '''
-      SELECT ei.*, s.name as school_name
+      SELECT ei.*, s.name_ar as school_name
       FROM external_income ei
       LEFT JOIN schools s ON ei.school_id = s.id
       WHERE ei.title LIKE ? OR ei.description LIKE ? OR ei.notes LIKE ? 
-            OR ei.category LIKE ? OR ei.income_type LIKE ? OR s.name LIKE ?
+            OR ei.category LIKE ? OR ei.income_type LIKE ? OR s.name_ar LIKE ?
       ORDER BY ei.income_date DESC, ei.created_at DESC
     ''',
       ['%$query%', '%$query%', '%$query%', '%$query%', '%$query%', '%$query%'],
@@ -126,7 +126,7 @@ class ExternalIncomeService {
     if (searchQuery != null && searchQuery.isNotEmpty) {
       whereClause += '''
         AND (ei.title LIKE ? OR ei.description LIKE ? OR ei.notes LIKE ? 
-             OR ei.category LIKE ? OR ei.income_type LIKE ? OR s.name LIKE ?)
+             OR ei.category LIKE ? OR ei.income_type LIKE ? OR s.name_ar LIKE ?)
       ''';
       whereArgs.addAll([
         '%$searchQuery%',
@@ -159,7 +159,7 @@ class ExternalIncomeService {
     }
 
     final result = await db.rawQuery('''
-      SELECT ei.*, s.name as school_name
+      SELECT ei.*, s.name_ar as school_name
       FROM external_income ei
       LEFT JOIN schools s ON ei.school_id = s.id
       WHERE $whereClause
