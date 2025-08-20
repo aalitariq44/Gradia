@@ -3,6 +3,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/app_localizations.dart';
 import 'pages/schools_page.dart';
 import 'pages/students_page.dart';
+import 'pages/tuitions_page.dart';
+import 'pages/additional_fees_page.dart';
 import 'pages/font_demo_page.dart';
 import 'utils/font_config.dart';
 
@@ -69,12 +71,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       PaneItem(
         icon: const Icon(FluentIcons.money),
         title: Text(localizations.tuitions),
-        body: Center(child: Text(localizations.tuitionsPageDev)),
+        body: const TuitionsPage(),
       ),
       PaneItem(
         icon: const Icon(FluentIcons.receipt_processing),
         title: Text(localizations.additionalFees),
-        body: Center(child: Text(localizations.additionalFeesPageDev)),
+        body: const AdditionalFeesPage(),
       ),
       PaneItem(
         icon: const Icon(FluentIcons.people),
