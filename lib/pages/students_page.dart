@@ -1,6 +1,11 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
+import 'package:gradia/printing/services/student_printing_service.dart';
 import 'package:intl/intl.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/student_model.dart';
 import '../models/school_model.dart';
 import '../services/student_service.dart';
@@ -755,13 +760,50 @@ class _StudentsPageState extends State<StudentsPage> {
       return;
     }
 
+    await showDialog(
+        context: context,
+        builder: (context) {
+          return ContentDialog(
+            title: const Text('اختر إجراء'),
+            content:
+                const Text('اختر ما إذا كنت تريد الطباعة مباشرة أو المعاينة.'),
+            actions: [
+              Button(
+                child: const Text('إلغاء'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              FilledButton(
+                child: const Text('طباعة'),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _executePrint(showExternalPreview: false);
+                },
+              ),
+              FilledButton(
+                child: const Text('معاينة في متصفح خارجي'),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _executePrint(showExternalPreview: true);
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  Future<void> _executePrint({required bool showExternalPreview}) async {
     try {
       // إنشاء معلومات التصفية المطبقة
       final filters = <String, dynamic>{};
 
       if (_selectedSchoolId != null) {
         final school = _schools.firstWhere((s) => s.id == _selectedSchoolId,
-            orElse: () => School(nameAr: 'غير معروف', schoolTypes: [], createdAt: DateTime.now()));
+            orElse: () => School(
+                nameAr: 'غير معروف',
+                schoolTypes: [],
+                createdAt: DateTime.now()));
         filters['schoolName'] = school.nameAr;
       }
 
@@ -781,12 +823,31 @@ class _StudentsPageState extends State<StudentsPage> {
         filters['gender'] = _selectedGender;
       }
 
-      // طباعة قائمة الطلاب مباشرة
-      await _printingService.printStudentsList(
-        students: _filteredStudents,
-        schools: _schools,
-        filters: filters,
-      );
+      if (!showExternalPreview) {
+        // طباعة قائمة الطلاب مباشرة
+        await _printingService.printStudentsList(
+          students: _filteredStudents,
+          schools: _schools,
+          filters: filters,
+        );
+      } else {
+        final pdfBytes = await _printingService.generateStudentsListPdf(
+          students: _filteredStudents,
+          schools: _schools,
+          filters: filters,
+        );
+
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/students_list.pdf');
+        await file.writeAsBytes(pdfBytes);
+
+        final uri = Uri.file(file.path);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        } else {
+          _showErrorDialog('لا يمكن فتح الملف.');
+        }
+      }
     } catch (e) {
       _showErrorDialog('خطأ في الطباعة: $e');
     }

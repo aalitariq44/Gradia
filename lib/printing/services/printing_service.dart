@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -334,5 +336,57 @@ class PrintingService {
       config: config,
       previewOptions: PreviewOptions(showPreview: showPreview),
     );
+  }
+
+  /// إنشاء ملف PDF كبايتات
+  Future<Uint8List> generatePdfBytes({
+    required List<Map<String, dynamic>> data,
+    required PrintConfig config,
+  }) async {
+    await _loadArabicFont();
+
+    final pdf = pw.Document();
+
+    // تحديد اتجاه الصفحة
+    final pageFormat = config.orientation == 'landscape'
+        ? PdfPageFormat.a4.landscape
+        : PdfPageFormat.a4;
+
+    // تصفية البيانات بناءً على الأعمدة المختارة
+    final filteredData = _filterDataByColumns(data, config.columnsToShow);
+
+    // إنشاء الصفحات
+    final pages = _buildTablePages(filteredData, config);
+
+    for (int i = 0; i < pages.length; i++) {
+      pdf.addPage(
+        pw.Page(
+          pageFormat: pageFormat,
+          textDirection: pw.TextDirection.rtl,
+          build: (pw.Context context) {
+            return pw.Column(
+              children: [
+                // رأس الصفحة
+                if (config.includeHeader)
+                  _buildHeader(config, i + 1, pages.length),
+
+                pw.SizedBox(height: 20),
+
+                // محتوى الجدول
+                pages[i],
+
+                pw.Spacer(),
+
+                // تذييل الصفحة
+                if (config.includeFooter)
+                  _buildFooter(config, i + 1, pages.length),
+              ],
+            );
+          },
+        ),
+      );
+    }
+
+    return pdf.save();
   }
 }

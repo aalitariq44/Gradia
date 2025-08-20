@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../models/print_config.dart';
 import '../services/printing_service.dart';
 import '../../models/student_model.dart';
@@ -320,5 +322,31 @@ class StudentPrintingService {
     });
 
     return data;
+  }
+
+  /// إنشاء ملف PDF لقائمة الطلاب
+  Future<Uint8List> generateStudentsListPdf({
+    required List<Student> students,
+    required List<School> schools,
+    Map<String, dynamic>? filters,
+  }) async {
+    final printData = _convertStudentsToTableData(students, schools);
+    final title = _generateTitle(filters);
+    final subtitle = _generateSubtitle(students.length, filters);
+
+    final config = PrintConfig(
+      title: title,
+      subtitle: subtitle,
+      orientation: 'portrait',
+      fontSize: 9.0,
+      headerFontSize: 16.0,
+      columnHeaders: _getStudentColumnHeaders(),
+      columnsToShow: _getDefaultColumns(),
+    );
+
+    return await _printingService.generatePdfBytes(
+      data: printData,
+      config: config,
+    );
   }
 }
