@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4, // زيادة رقم الإصدار
+      version: 5, // زيادة رقم الإصدار
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -145,6 +145,33 @@ class DatabaseHelper {
         'CREATE INDEX idx_installments_date ON installments (payment_date)',
       );
     }
+
+    if (oldVersion < 5) {
+      // ترقية من الإصدار 4 إلى 5 - إضافة جدول الرسوم الإضافية
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS additional_fees (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_id INTEGER NOT NULL,
+          fee_type TEXT NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          paid BOOLEAN DEFAULT FALSE,
+          payment_date DATE,
+          added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          notes TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+        )
+      ''');
+
+      // إنشاء فهارس للجدول الجديد
+      await db.execute(
+        'CREATE INDEX idx_additional_fees_student_id ON additional_fees (student_id)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_additional_fees_paid ON additional_fees (paid)',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -216,20 +243,18 @@ class DatabaseHelper {
 
     // إنشاء جدول الرسوم الإضافية
     await db.execute('''
-      CREATE TABLE additional_fees (
+      CREATE TABLE IF NOT EXISTS additional_fees (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_id INTEGER NOT NULL,
         fee_type TEXT NOT NULL,
-        description TEXT,
-        amount REAL NOT NULL,
-        due_date TEXT NOT NULL,
-        paid_date TEXT,
-        payment_status TEXT NOT NULL DEFAULT 'pending',
-        payment_method TEXT,
+        amount DECIMAL(10,2) NOT NULL,
+        paid BOOLEAN DEFAULT FALSE,
+        payment_date DATE,
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         notes TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT,
-        FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
       )
     ''');
 
@@ -249,7 +274,7 @@ class DatabaseHelper {
       'CREATE INDEX idx_additional_fees_student_id ON additional_fees (student_id)',
     );
     await db.execute(
-      'CREATE INDEX idx_additional_fees_status ON additional_fees (payment_status)',
+      'CREATE INDEX idx_additional_fees_paid ON additional_fees (paid)',
     );
 
     // إدراج مستخدم افتراضي (admin/admin123)

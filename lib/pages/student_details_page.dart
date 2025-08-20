@@ -7,6 +7,7 @@ import '../models/school_model.dart';
 import '../models/installment_model.dart';
 import '../services/school_service.dart';
 import '../services/installment_service.dart';
+import 'additional_fees_dialog.dart';
 
 class StudentDetailsPage extends StatefulWidget {
   final Student student;
@@ -95,6 +96,18 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
     );
   }
 
+  void _showAdditionalFeesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AdditionalFeesDialog(
+        student: _student,
+        onFeesUpdated: () {
+          // يمكن إضافة تحديث إضافي هنا إذا لزم الأمر
+        },
+      ),
+    );
+  }
+
   void _showAddInstallmentDialog() {
     showDialog(
       context: context,
@@ -139,8 +152,7 @@ class _StudentDetailsPageState extends State<StudentDetailsPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Button(
-                    onPressed: () =>
-                        _showErrorDialog('وظيفة الرسوم الإضافية لم تنفذ بعد'),
+                    onPressed: _showAdditionalFeesDialog,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: const [
