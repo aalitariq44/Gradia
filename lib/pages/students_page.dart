@@ -213,25 +213,28 @@ class _StudentsPageState extends State<StudentsPage> {
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ScaffoldPage(
         header: PageHeader(title: const Text('إدارة الطلاب')),
-        content: _isLoading
-            ? const Center(child: ProgressRing())
-            : Column(
-                children: [
-                  // شريط التصفية العلوي
-                  _buildFilterBar(),
-                  const SizedBox(height: 16),
+        content: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: _isLoading
+              ? const Center(child: ProgressRing())
+              : Column(
+                  children: [
+                    // شريط التصفية العلوي
+                    _buildFilterBar(),
+                    const SizedBox(height: 16),
 
-                  // الأزرار الوظيفية
-                  _buildActionButtons(),
-                  const SizedBox(height: 16),
+                    // الأزرار الوظيفية
+                    _buildActionButtons(),
+                    const SizedBox(height: 16),
 
-                  // الجدول الرئيسي
-                  Expanded(child: _buildStudentsTable()),
+                    // الجدول الرئيسي
+                    Expanded(child: _buildStudentsTable()),
 
-                  // الإحصائيات السفلية
-                  _buildStatisticsBar(),
-                ],
-              ),
+                    // الإحصائيات السفلية
+                    _buildStatisticsBar(),
+                  ],
+                ),
+        ),
       ),
     );
   }

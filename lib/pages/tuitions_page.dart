@@ -249,30 +249,33 @@ class _TuitionsPageState extends State<TuitionsPage> {
     return Directionality(
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ScaffoldPage(
-        content: Column(
-          children: [
-            // الرأس والعنوان
-            _buildHeader(),
-            const SizedBox(height: 16),
+        content: Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Column(
+            children: [
+              // الرأس والعنوان
+              _buildHeader(),
+              const SizedBox(height: 16),
 
-            // شريط إدارة الأقساط
-            _buildManagementBar(),
-            const SizedBox(height: 16),
+              // شريط إدارة الأقساط
+              _buildManagementBar(),
+              const SizedBox(height: 16),
 
-            // قسم التصفية والبحث
-            _buildFilterSection(),
-            const SizedBox(height: 16),
+              // قسم التصفية والبحث
+              _buildFilterSection(),
+              const SizedBox(height: 16),
 
-            // أزرار الإجراءات
-            _buildActionButtons(),
-            const SizedBox(height: 16),
+              // أزرار الإجراءات
+              _buildActionButtons(),
+              const SizedBox(height: 16),
 
-            // الجدول الرئيسي
-            Expanded(child: _buildInstallmentsTable()),
+              // الجدول الرئيسي
+              Expanded(child: _buildInstallmentsTable()),
 
-            // معلومات التلخيص
-            _buildSummarySection(),
-          ],
+              // معلومات التلخيص
+              _buildSummarySection(),
+            ],
+          ),
         ),
       ),
     );
