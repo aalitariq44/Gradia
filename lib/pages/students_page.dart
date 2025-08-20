@@ -5,6 +5,7 @@ import '../models/student_model.dart';
 import '../models/school_model.dart';
 import '../services/student_service.dart';
 import '../services/school_service.dart';
+import '../printing/printing_system.dart';
 import './student_details_page.dart';
 import './edit_student_dialog.dart';
 
@@ -18,6 +19,7 @@ class StudentsPage extends StatefulWidget {
 class _StudentsPageState extends State<StudentsPage> {
   final StudentService _studentService = StudentService();
   final SchoolService _schoolService = SchoolService();
+  final StudentPrintingService _printingService = StudentPrintingService();
 
   List<Student> _students = [];
   List<Student> _filteredStudents = [];
@@ -415,18 +417,13 @@ class _StudentsPageState extends State<StudentsPage> {
           ),
           const SizedBox(width: 8),
           Button(
-            onPressed: () {
-              print('Students to print: ${_filteredStudents.length}');
-              _showErrorDialog(
-                'وظيفة الطباعة لم تنفذ بعد، لكن البيانات جاهزة للطباعة بالترتيب الصحيح.',
-              );
-            },
+            onPressed: _printStudentsList,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: const [
                 Icon(FluentIcons.print),
                 SizedBox(width: 4),
-                Text('طباعة'),
+                Text('طباعة قائمة الطلاب'),
               ],
             ),
           ),
@@ -747,6 +744,63 @@ class _StudentsPageState extends State<StudentsPage> {
       } catch (e) {
         _showErrorDialog('خطأ في حذف الطالب: $e');
       }
+    }
+  }
+
+  /// طباعة قائمة الطلاب مع معاينة
+  Future<void> _printStudentsList() async {
+    if (_filteredStudents.isEmpty) {
+      _showErrorDialog('لا توجد طلاب للطباعة');
+      return;
+    }
+
+    try {
+      // إنشاء معلومات التصفية المطبقة
+      final filters = <String, dynamic>{};
+      
+      if (_selectedSchoolId != null) {
+        final school = _schools.firstWhere((s) => s.id == _selectedSchoolId);
+        filters['schoolName'] = school.nameAr;
+      }
+      
+      if (_selectedGrade != null) {
+        filters['grade'] = _selectedGrade;
+      }
+      
+      if (_selectedSection != null) {
+        filters['section'] = _selectedSection;
+      }
+      
+      if (_selectedStatus != null) {
+        filters['status'] = _selectedStatus;
+      }
+      
+      if (_selectedGender != null) {
+        filters['gender'] = _selectedGender;
+      }
+
+      // طباعة قائمة الطلاب
+      await _printingService.printStudentsList(
+        students: _filteredStudents,
+        schools: _schools,
+        filters: filters,
+        showPreview: true,
+      );
+
+      // عرض رسالة نجاح
+      if (mounted) {
+        displayInfoBar(
+          context,
+          builder: (context, close) => InfoBar(
+            title: const Text('تم إرسال الطباعة'),
+            content: Text('تم إرسال قائمة ${_filteredStudents.length} طالب للطباعة'),
+            severity: InfoBarSeverity.success,
+            onClose: close,
+          ),
+        );
+      }
+    } catch (e) {
+      _showErrorDialog('خطأ في الطباعة: $e');
     }
   }
 }
