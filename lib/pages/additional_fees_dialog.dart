@@ -23,10 +23,10 @@ class AdditionalFeesDialog extends StatefulWidget {
 
 class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
   final AdditionalFeeService _feeService = AdditionalFeeService();
-  
+
   List<AdditionalFee> _fees = [];
   bool _isLoading = false;
-  
+
   // الإحصائيات
   int _feesCount = 0;
   double _totalAmount = 0.0;
@@ -41,14 +41,16 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       _fees = await _feeService.getStudentAdditionalFees(widget.student.id!);
       _feesCount = await _feeService.getFeesCount(widget.student.id!);
       _totalAmount = await _feeService.getTotalFeesAmount(widget.student.id!);
       _paidAmount = await _feeService.getTotalPaidAmount(widget.student.id!);
-      _unpaidAmount = await _feeService.getTotalUnpaidAmount(widget.student.id!);
-      
+      _unpaidAmount = await _feeService.getTotalUnpaidAmount(
+        widget.student.id!,
+      );
+
       setState(() {});
     } catch (e) {
       _showErrorDialog('خطأ في تحميل البيانات: $e');
@@ -89,10 +91,8 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
   void _showPrintDialog() {
     showDialog(
       context: context,
-      builder: (context) => PrintAdditionalFeesDialog(
-        student: widget.student,
-        fees: _fees,
-      ),
+      builder: (context) =>
+          PrintAdditionalFeesDialog(student: widget.student, fees: _fees),
     );
   }
 
@@ -101,7 +101,9 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
       context: context,
       builder: (context) => ContentDialog(
         title: const Text('تأكيد الحذف'),
-        content: Text('هل تريد حذف رسم "${fee.feeType}" بمبلغ ${fee.amount.toStringAsFixed(0)} د.ع؟'),
+        content: Text(
+          'هل تريد حذف رسم "${fee.feeType}" بمبلغ ${fee.amount.toStringAsFixed(0)} د.ع؟',
+        ),
         actions: [
           Button(
             child: const Text('إلغاء'),
@@ -120,7 +122,7 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
         await _feeService.deleteAdditionalFee(fee.id!);
         _loadData();
         widget.onFeesUpdated?.call();
-        
+
         if (mounted) {
           displayInfoBar(
             context,
@@ -145,10 +147,10 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
       } else {
         await _feeService.payFee(fee.id!, DateTime.now());
       }
-      
+
       _loadData();
       widget.onFeesUpdated?.call();
-      
+
       if (mounted) {
         displayInfoBar(
           context,
@@ -170,10 +172,7 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
     return Directionality(
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ContentDialog(
-        constraints: const BoxConstraints(
-          maxWidth: 1200,
-          maxHeight: 800,
-        ),
+        constraints: const BoxConstraints(maxWidth: 1200, maxHeight: 800),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -330,49 +329,63 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
                                         flex: 2,
                                         child: Text(
                                           'النوع',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           'المبلغ',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           'تاريخ الإضافة',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           'تاريخ الدفع',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 1,
                                         child: Text(
                                           'الحالة',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 3,
                                         child: Text(
                                           'الملاحظات',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           'إجراءات',
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -390,7 +403,9 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
                                         border: Border(
-                                          bottom: BorderSide(color: Colors.grey[100]),
+                                          bottom: BorderSide(
+                                            color: Colors.grey[100],
+                                          ),
                                         ),
                                       ),
                                       child: Row(
@@ -411,35 +426,49 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
                                           Expanded(
                                             flex: 2,
                                             child: Text(
-                                              DateFormat('yyyy/MM/dd').format(fee.addedAt),
+                                              DateFormat(
+                                                'yyyy/MM/dd',
+                                              ).format(fee.addedAt),
                                             ),
                                           ),
                                           Expanded(
                                             flex: 2,
                                             child: Text(
                                               fee.paymentDate != null
-                                                  ? DateFormat('yyyy/MM/dd').format(fee.paymentDate!)
+                                                  ? DateFormat(
+                                                      'yyyy/MM/dd',
+                                                    ).format(fee.paymentDate!)
                                                   : '-',
                                             ),
                                           ),
                                           Expanded(
                                             flex: 1,
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
                                               decoration: BoxDecoration(
                                                 color: fee.paid
-                                                    ? Colors.green.withOpacity(0.2)
-                                                    : Colors.orange.withOpacity(0.2),
-                                                borderRadius: BorderRadius.circular(12),
+                                                    ? Colors.green.withOpacity(
+                                                        0.2,
+                                                      )
+                                                    : Colors.orange.withOpacity(
+                                                        0.2,
+                                                      ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               child: Text(
-                                                fee.paid ? 'مدفوع' : 'غير مدفوع',
+                                                fee.paid
+                                                    ? 'مدفوع'
+                                                    : 'غير مدفوع',
                                                 textAlign: TextAlign.center,
                                                 style: TextStyle(
-                                                  color: fee.paid ? Colors.green : Colors.orange,
+                                                  color: fee.paid
+                                                      ? Colors.green
+                                                      : Colors.orange,
                                                   fontWeight: FontWeight.w600,
                                                   fontSize: 12,
                                                 ),
@@ -459,23 +488,38 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                IconButton(
-                                                  icon: Icon(
-                                                    fee.paid
-                                                        ? FluentIcons.money
-                                                        : FluentIcons.money,
-                                                    color: fee.paid
-                                                        ? Colors.orange
-                                                        : Colors.green,
+                                                if (!fee.paid)
+                                                  IconButton(
+                                                    style: ButtonStyle(
+                                                      padding: ButtonState.all(
+                                                        const EdgeInsets.all(
+                                                          12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    icon: Icon(
+                                                      FluentIcons.money,
+                                                      color: Colors.green,
+                                                      size: 32,
+                                                    ),
+                                                    onPressed: () =>
+                                                        _togglePaymentStatus(
+                                                          fee,
+                                                        ),
                                                   ),
-                                                  onPressed: () => _togglePaymentStatus(fee),
-                                                ),
                                                 IconButton(
+                                                  style: ButtonStyle(
+                                                    padding: ButtonState.all(
+                                                      const EdgeInsets.all(12),
+                                                    ),
+                                                  ),
                                                   icon: Icon(
                                                     FluentIcons.delete,
                                                     color: Colors.red,
+                                                    size: 32,
                                                   ),
-                                                  onPressed: () => _deleteFee(fee),
+                                                  onPressed: () =>
+                                                      _deleteFee(fee),
                                                 ),
                                               ],
                                             ),

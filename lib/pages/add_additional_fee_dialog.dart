@@ -32,16 +32,16 @@ class _AddAdditionalFeeDialogState extends State<AddAdditionalFeeDialog> {
   DateTime _paymentDate = DateTime.now();
   bool _isLoading = false;
 
-  // أنواع الرسوم المحددة مسبقاً
+  // أنواع الالمحددة مسبقاً
   final List<String> _predefinedFeeTypes = [
-    'رسوم امتحانات',
-    'رسوم كتب',
-    'رسوم نشاطات',
-    'رسوم مختبر',
-    'رسوم مكتبة',
-    'رسوم نقل',
-    'رسوم زي مدرسي',
-    'رسوم إضافية أخرى',
+    'التسجيل',
+    'كتب',
+    'زي مدرسي',
+    'نشاطات',
+    'مختبر',
+    'مكتبة',
+    'نقل',
+    'إضافية أخرى',
   ];
 
   @override
@@ -59,7 +59,7 @@ class _AddAdditionalFeeDialogState extends State<AddAdditionalFeeDialog> {
 
     try {
       final amount = double.parse(_amountController.text);
-      
+
       String feeType;
       if (_selectedFeeType == 'نوع مخصص') {
         feeType = _customTypeController.text.trim();
@@ -121,10 +121,7 @@ class _AddAdditionalFeeDialogState extends State<AddAdditionalFeeDialog> {
     return Directionality(
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ContentDialog(
-        constraints: const BoxConstraints(
-          maxWidth: 500,
-          maxHeight: 600,
-        ),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
