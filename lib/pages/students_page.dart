@@ -5,7 +5,6 @@ import '../models/student_model.dart';
 import '../models/school_model.dart';
 import '../services/student_service.dart';
 import '../services/school_service.dart';
-import '../utils/app_text_styles.dart';
 import './student_details_page.dart';
 
 class StudentsPage extends StatefulWidget {
