@@ -41,8 +41,11 @@ class PrintingService {
         ? PdfPageFormat.a4.landscape
         : PdfPageFormat.a4;
 
+    // تصفية البيانات بناءً على الأعمدة المختارة
+    final filteredData = _filterDataByColumns(data, config.columnsToShow);
+
     // إنشاء الصفحات
-    final pages = _buildTablePages(data, config);
+    final pages = _buildTablePages(filteredData, config);
 
     for (int i = 0; i < pages.length; i++) {
       pdf.addPage(
@@ -86,6 +89,26 @@ class PrintingService {
         name: config.title,
       );
     }
+  }
+
+  /// تصفية البيانات بناءً على الأعمدة المختارة
+  List<Map<String, dynamic>> _filterDataByColumns(
+    List<Map<String, dynamic>> data,
+    List<String> columnsToShow,
+  ) {
+    if (data.isEmpty || columnsToShow.isEmpty) {
+      return data;
+    }
+
+    return data.map((row) {
+      final filteredRow = <String, dynamic>{};
+      for (final column in columnsToShow) {
+        if (row.containsKey(column)) {
+          filteredRow[column] = row[column];
+        }
+      }
+      return filteredRow;
+    }).toList();
   }
 
   /// بناء رأس الصفحة

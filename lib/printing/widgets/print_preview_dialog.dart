@@ -63,6 +63,17 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             child: const Text('إلغاء'),
             onPressed: widget.onCancel ?? () => Navigator.pop(context),
           ),
+          Button(
+            onPressed: _handlePreviewPDF,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(FluentIcons.preview_link),
+                SizedBox(width: 4),
+                Text('معاينة PDF'),
+              ],
+            ),
+          ),
           FilledButton(
             onPressed: _isLoading ? null : _handlePrint,
             child: _isLoading
@@ -181,6 +192,10 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             ),
             const SizedBox(height: 16),
 
+            // اختيار الأعمدة
+            _buildColumnSelection(),
+            const SizedBox(height: 16),
+
             // إعدادات المحتوى
             const Text(
               'إعدادات المحتوى',
@@ -232,6 +247,96 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildColumnSelection() {
+    if (widget.data.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // جلب جميع الأعمدة المتاحة
+    final availableColumns = widget.data.first.keys.toList();
+    final selectedColumns = _config.columnsToShow.isNotEmpty
+        ? _config.columnsToShow
+        : availableColumns;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'اختيار الأعمدة',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const Spacer(),
+            Button(
+              child: const Text('إظهار الكل'),
+              onPressed: () {
+                setState(() {
+                  _config = _config.copyWith(columnsToShow: availableColumns);
+                });
+              },
+            ),
+            const SizedBox(width: 8),
+            Button(
+              child: const Text('إخفاء الكل'),
+              onPressed: () {
+                setState(() {
+                  _config = _config.copyWith(columnsToShow: []);
+                });
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: ListView.builder(
+            itemCount: availableColumns.length,
+            itemBuilder: (context, index) {
+              final column = availableColumns[index];
+              final columnName = _config.columnHeaders[column] ?? column;
+              final isSelected = selectedColumns.contains(column);
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    Checkbox(
+                      checked: isSelected,
+                      onChanged: (value) {
+                        setState(() {
+                          List<String> newColumns = List.from(selectedColumns);
+                          if (value == true && !newColumns.contains(column)) {
+                            newColumns.add(column);
+                          } else if (value == false) {
+                            newColumns.remove(column);
+                          }
+                          _config = _config.copyWith(columnsToShow: newColumns);
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(columnName)),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'تم اختيار ${selectedColumns.length} من ${availableColumns.length} عمود',
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+      ],
     );
   }
 
@@ -362,47 +467,57 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
         ? _config.columnsToShow
         : widget.data.first.keys.toList();
 
-    return Table(
-      border: TableBorder.all(color: Colors.grey[300]),
-      children: [
-        // رأس الجدول
-        TableRow(
-          decoration: BoxDecoration(color: Colors.grey[200]),
-          children: columns.map((column) {
-            final headerText = _config.columnHeaders[column] ?? column;
-            return Padding(
-              padding: const EdgeInsets.all(4),
-              child: Text(
-                headerText,
-                style: TextStyle(
-                  fontSize: _config.fontSize,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            );
-          }).toList(),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]),
+          borderRadius: BorderRadius.circular(4),
         ),
-
-        // صفوف البيانات
-        ...previewData
-            .map(
-              (row) => TableRow(
-                children: columns.map((column) {
-                  final cellValue = _formatCellValue(row[column]);
-                  return Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Text(
-                      cellValue,
-                      style: TextStyle(fontSize: _config.fontSize),
-                      textAlign: TextAlign.center,
+        child: Table(
+          border: TableBorder.all(color: Colors.grey[300]),
+          defaultColumnWidth: const IntrinsicColumnWidth(),
+          children: [
+            // رأس الجدول
+            TableRow(
+              decoration: BoxDecoration(color: Colors.grey[200]),
+              children: columns.map((column) {
+                final headerText = _config.columnHeaders[column] ?? column;
+                return Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(
+                    headerText,
+                    style: TextStyle(
+                      fontSize: _config.fontSize,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                }).toList(),
-              ),
-            )
-            .toList(),
-      ],
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              }).toList(),
+            ),
+
+            // صفوف البيانات
+            ...previewData
+                .map(
+                  (row) => TableRow(
+                    children: columns.map((column) {
+                      final cellValue = _formatCellValue(row[column]);
+                      return Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(
+                          cellValue,
+                          style: TextStyle(fontSize: _config.fontSize),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                )
+                .toList(),
+          ],
+        ),
+      ),
     );
   }
 
@@ -444,6 +559,19 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
       }
     } catch (e) {
       _showErrorDialog('خطأ في الطباعة: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handlePreviewPDF() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // استخدم نفس نظام المعاينة
+      await widget.onPrint(_config.copyWith());
+    } catch (e) {
+      _showErrorDialog('خطأ في المعاينة: $e');
     } finally {
       setState(() => _isLoading = false);
     }

@@ -780,28 +780,13 @@ class _StudentsPageState extends State<StudentsPage> {
         filters['gender'] = _selectedGender;
       }
 
-      // طباعة قائمة الطلاب
-      await _printingService.printStudentsList(
+      // طباعة قائمة الطلاب مع نافذة اختيار الأعمدة
+      await _printingService.printStudentsListWithColumnSelection(
         students: _filteredStudents,
         schools: _schools,
         filters: filters,
-        showPreview: true,
+        context: context,
       );
-
-      // عرض رسالة نجاح
-      if (mounted) {
-        displayInfoBar(
-          context,
-          builder: (context, close) => InfoBar(
-            title: const Text('تم إرسال الطباعة'),
-            content: Text(
-              'تم إرسال قائمة ${_filteredStudents.length} طالب للطباعة',
-            ),
-            severity: InfoBarSeverity.success,
-            onClose: close,
-          ),
-        );
-      }
     } catch (e) {
       _showErrorDialog('خطأ في الطباعة: $e');
     }
