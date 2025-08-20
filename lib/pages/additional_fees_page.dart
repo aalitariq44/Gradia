@@ -301,7 +301,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
               Expanded(
                 child: _buildStatCard(
                   'إجمالي المبلغ',
-                  '${NumberFormat('#,###').format(_totalAmount)} ريال',
+                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
                   Colors.white.withOpacity(0.2),
                   FluentIcons.money,
                 ),
@@ -310,7 +310,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
               Expanded(
                 child: _buildStatCard(
                   'المحصول',
-                  '${NumberFormat('#,###').format(_paidAmount)} ريال',
+                  '${NumberFormat('#,###').format(_paidAmount)} د.ع',
                   Colors.white.withOpacity(0.2),
                   FluentIcons.accept,
                 ),
@@ -319,7 +319,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
               Expanded(
                 child: _buildStatCard(
                   'المستحق',
-                  '${NumberFormat('#,###').format(_unpaidAmount)} ريال',
+                  '${NumberFormat('#,###').format(_unpaidAmount)} د.ع',
                   Colors.white.withOpacity(0.2),
                   FluentIcons.warning,
                 ),
@@ -713,7 +713,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${NumberFormat('#,###').format(fee.amount)} ريال',
+                          '${NumberFormat('#,###').format(fee.amount)} د.ع',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: fee.paid
@@ -836,7 +836,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'المبلغ غير المدفوع: ${NumberFormat('#,###').format(_unpaidAmount)} ريال',
+                      'المبلغ غير المدفوع: ${NumberFormat('#,###').format(_unpaidAmount)} د.ع',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.orange.dark,
@@ -845,7 +845,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'المبلغ المدفوع: ${NumberFormat('#,###').format(_paidAmount)} ريال',
+                      'المبلغ المدفوع: ${NumberFormat('#,###').format(_paidAmount)} د.ع',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.green.dark,

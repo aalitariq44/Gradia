@@ -351,7 +351,7 @@ class _EditEmployeeDialogState extends State<EditEmployeeDialog> {
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: '0.00',
-                        suffixText: 'ريال',
+                        suffixText: 'د.ع',
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,

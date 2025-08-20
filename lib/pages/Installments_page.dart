@@ -619,6 +619,17 @@ class _TuitionsPageState extends State<TuitionsPage> {
             ),
             child: const Row(
               children: [
+                // new sequence header
+                const Expanded(
+                  flex: 1,
+                  child: Text(
+                    'تسلسل',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
                 Expanded(
                   flex: 2,
                   child: Text(
@@ -706,6 +717,8 @@ class _TuitionsPageState extends State<TuitionsPage> {
                   ),
                   child: Row(
                     children: [
+                      // تسلسل
+                      Expanded(flex: 1, child: Text('${index + 1}')),
                       Expanded(
                         flex: 2,
                         child: Text('${installment.id ?? '-'}'),

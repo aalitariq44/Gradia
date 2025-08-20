@@ -371,7 +371,7 @@ class _TeachersPageState extends State<TeachersPage> {
                                     DataCell(Text('${teacher.classHours}')),
                                     DataCell(
                                       Text(
-                                        '${teacher.monthlySalary.toStringAsFixed(2)} ريال',
+                                        '${teacher.monthlySalary.toStringAsFixed(2)} د.ع',
                                       ),
                                     ),
                                     DataCell(Text(teacher.phone ?? '-')),
@@ -472,7 +472,7 @@ class _TeachersPageState extends State<TeachersPage> {
                           Expanded(
                             child: _buildSummaryCard(
                               'إجمالي الرواتب',
-                              '${_totalSalaries.toStringAsFixed(2)} ريال',
+                              '${_totalSalaries.toStringAsFixed(2)} د.ع',
                               Icons.monetization_on,
                               Colors.purple,
                             ),

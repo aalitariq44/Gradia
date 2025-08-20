@@ -408,7 +408,7 @@ class _EmployeesPageState extends State<EmployeesPage> {
                                     DataCell(Text(employee.jobType)),
                                     DataCell(
                                       Text(
-                                        '${employee.monthlySalary.toStringAsFixed(2)} ريال',
+                                        '${employee.monthlySalary.toStringAsFixed(2)} د.ع',
                                       ),
                                     ),
                                     DataCell(Text(employee.phone ?? '-')),
@@ -511,7 +511,7 @@ class _EmployeesPageState extends State<EmployeesPage> {
                           Expanded(
                             child: _buildSummaryCard(
                               'إجمالي الرواتب',
-                              '${_totalSalaries.toStringAsFixed(2)} ريال',
+                              '${_totalSalaries.toStringAsFixed(2)} د.ع',
                               Icons.monetization_on,
                               Colors.purple,
                             ),

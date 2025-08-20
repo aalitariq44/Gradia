@@ -288,7 +288,7 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: '0.00',
-                        suffixText: 'ريال',
+                        suffixText: 'د.ع',
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
