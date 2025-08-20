@@ -286,24 +286,27 @@ class _AdditionalFeesDialogState extends State<AdditionalFeesDialog> {
 
                     // جدول الرسوم
                     _fees.isEmpty
-                        ? Container(
-                            padding: const EdgeInsets.all(40),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  FluentIcons.money,
-                                  size: 64,
-                                  color: Colors.grey[160],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'لا توجد رسوم إضافية',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(40),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    FluentIcons.money,
+                                    size: 64,
                                     color: Colors.grey[160],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'لا توجد رسوم إضافية',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[160],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           )
                         : Container(
