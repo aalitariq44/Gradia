@@ -17,15 +17,20 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
   List<ExternalIncomeModel> _allIncomes = [];
   List<ExternalIncomeModel> _filteredIncomes = [];
   List<SchoolModel> _schools = [];
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   // Filter controllers
   final TextEditingController _searchController = TextEditingController();
   int? _selectedSchoolId;
   String? _selectedCategory;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
 
   // Statistics
-  Map<String, dynamic> _statistics = {};
+  double _totalAmount = 0.0;
+  int _totalCount = 0;
 
   final DateFormat _displayDateFormatter = DateFormat('dd/MM/yyyy');
 
@@ -38,50 +43,89 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
     super.dispose();
   }
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final incomes = await ExternalIncomeService.getAllExternalIncomes();
-      final schools = await SchoolService.getAllSchools();
-      final statistics =
-          await ExternalIncomeService.getExternalIncomeStatistics();
-
-      setState(() {
-        _allIncomes = incomes;
-        _filteredIncomes = incomes;
-        _schools = schools;
-        _statistics = statistics;
-        _isLoading = false;
-      });
+      await Future.wait([_loadIncomes(), _loadSchools()]);
+      _applyFilters();
     } catch (e) {
+      _showErrorDialog('خطأ في تحميل البيانات: $e');
+    } finally {
       setState(() => _isLoading = false);
-      print('خطأ في تحميل البيانات: $e');
     }
   }
 
-  Future<void> _applyFilters() async {
-    setState(() => _isLoading = true);
-    try {
-      final filteredIncomes =
-          await ExternalIncomeService.advancedSearchExternalIncomes(
-            searchQuery: _searchController.text.trim().isEmpty
-                ? null
-                : _searchController.text.trim(),
-            schoolId: _selectedSchoolId,
-            category: _selectedCategory,
-          );
+  Future<void> _loadIncomes() async {
+    _allIncomes = await ExternalIncomeService.getAllExternalIncomes();
+  }
 
-      setState(() {
-        _filteredIncomes = filteredIncomes;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      print('خطأ في تطبيق الفلاتر: $e');
+  Future<void> _loadSchools() async {
+    _schools = await SchoolService.getAllSchools();
+  }
+
+  void _applyFilters() {
+    List<ExternalIncomeModel> filtered = List.from(_allIncomes);
+
+    // تصفية حسب المدرسة
+    if (_selectedSchoolId != null) {
+      filtered = filtered
+          .where((i) => i.schoolId == _selectedSchoolId)
+          .toList();
     }
+
+    // تصفية حسب الفئة
+    if (_selectedCategory != null) {
+      filtered = filtered
+          .where((i) => i.category == _selectedCategory)
+          .toList();
+    }
+
+    // تصفية حسب نطاق التاريخ
+    if (_startDate != null) {
+      filtered = filtered
+          .where(
+            (i) => i.incomeDate.isAfter(
+              _startDate!.subtract(const Duration(days: 1)),
+            ),
+          )
+          .toList();
+    }
+    if (_endDate != null) {
+      filtered = filtered
+          .where(
+            (i) =>
+                i.incomeDate.isBefore(_endDate!.add(const Duration(days: 1))),
+          )
+          .toList();
+    }
+
+    // تصفية حسب البحث
+    if (_searchController.text.isNotEmpty) {
+      final searchQuery = _searchController.text.toLowerCase();
+      filtered = filtered.where((i) {
+        final title = i.title.toLowerCase();
+        final description = (i.description ?? '').toLowerCase();
+        final idString = i.id?.toString() ?? '';
+        return title.contains(searchQuery) ||
+            description.contains(searchQuery) ||
+            idString.contains(searchQuery);
+      }).toList();
+    }
+
+    setState(() {
+      _filteredIncomes = filtered;
+      _calculateTotals();
+    });
+  }
+
+  void _calculateTotals() {
+    _totalAmount = _filteredIncomes.fold(0.0, (sum, item) => sum + item.amount);
+    _totalCount = _filteredIncomes.length;
   }
 
   void _clearFilters() {
@@ -89,8 +133,113 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
     setState(() {
       _selectedSchoolId = null;
       _selectedCategory = null;
-      _filteredIncomes = _allIncomes;
+      _startDate = null;
+      _endDate = null;
+      _startDateController.clear();
+      _endDateController.clear();
     });
+    _applyFilters();
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('خطأ'),
+        content: Text(message),
+        actions: [
+          FilledButton(
+            child: const Text('موافق'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selectDate(bool isStartDate) async {
+    final currentDate = isStartDate ? _startDate : _endDate;
+    final TextEditingController dateController = TextEditingController(
+      text: currentDate != null
+          ? DateFormat('yyyy-MM-dd').format(currentDate)
+          : '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: Text(isStartDate ? 'اختر تاريخ البداية' : 'اختر تاريخ النهاية'),
+        content: SizedBox(
+          width: 300,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormBox(
+                controller: dateController,
+                placeholder: 'YYYY-MM-DD',
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  try {
+                    DateTime.parse(value);
+                    return null;
+                  } catch (e) {
+                    return 'تنسيق التاريخ غير صحيح';
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'أمثلة: 2024-01-15, 2024-12-31',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          Button(
+            child: const Text('إلغاء'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          FilledButton(
+            child: const Text('موافق'),
+            onPressed: () {
+              try {
+                if (dateController.text.isNotEmpty) {
+                  final picked = DateTime.parse(dateController.text);
+                  setState(() {
+                    if (isStartDate) {
+                      _startDate = picked;
+                      _startDateController.text = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(picked);
+                    } else {
+                      _endDate = picked;
+                      _endDateController.text = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(picked);
+                    }
+                  });
+                  _applyFilters();
+                }
+                Navigator.pop(context);
+              } catch (e) {
+                // إظهار رسالة خطأ
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getSchoolName(int? schoolId) {
+    if (schoolId == null) return 'غير محدد';
+    try {
+      final school = _schools.firstWhere((s) => s.id == schoolId);
+      return school.nameAr;
+    } catch (e) {
+      return 'غير محدد';
+    }
   }
 
   Future<void> _deleteIncome(ExternalIncomeModel income) async {
@@ -122,246 +271,256 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
     }
   }
 
-  Widget _buildStatisticsCards() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: FluentTheme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'إدارة الواردات الخارجية',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatisticCard(
-                  'إجمالي الواردات (الشهر الحالي)',
-                  '${NumberFormat('#,##0.00').format(_statistics['monthlyAmount'] ?? 0)} د.ع',
-                  FluentIcons.calendar,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatisticCard(
-                  'إجمالي الواردات (العام الحالي)',
-                  '${NumberFormat('#,##0.00').format(_statistics['yearlyAmount'] ?? 0)} د.ع',
-                  FluentIcons.calendar,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatisticCard(
-                  'عدد السجلات المعروضة',
-                  '${_filteredIncomes.length}',
-                  FluentIcons.number,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatisticCard(String title, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: FluentTheme.of(context).micaBackgroundColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 12)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFilterSection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: FluentTheme.of(context).micaBackgroundColor,
-        borderRadius: BorderRadius.circular(8),
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'تصفية وبحث',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            'التصفية والبحث',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: InfoLabel(
-                  label: 'المدرسة',
-                  child: ComboBox<int>(
-                    placeholder: const Text('جميع المدارس'),
-                    value: _selectedSchoolId,
-                    items: _schools
-                        .map(
-                          (school) => ComboBoxItem<int>(
-                            value: school.id!,
-                            child: Text(school.nameAr),
+
+          // Filters row with right alignment and fixed widths
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // قائمة المدارس
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('المدرسة'),
+                      const SizedBox(height: 8),
+                      ComboBox<int?>(
+                        placeholder: const Text('جميع المدارس'),
+                        value: _selectedSchoolId,
+                        items: [
+                          const ComboBoxItem<int?>(
+                            value: null,
+                            child: Text('جميع المدارس'),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedSchoolId = value);
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: InfoLabel(
-                  label: 'الفئة',
-                  child: ComboBox<String>(
-                    placeholder: const Text('جميع الفئات'),
-                    value: _selectedCategory,
-                    items: const [
-                      ComboBoxItem(
-                        value: 'رسوم دراسية',
-                        child: Text('رسوم دراسية'),
+                          ..._schools.map(
+                            (school) => ComboBoxItem<int?>(
+                              value: school.id,
+                              child: Text(school.nameAr),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedSchoolId = value);
+                          _applyFilters();
+                        },
                       ),
-                      ComboBoxItem(value: 'أنشطة', child: Text('أنشطة')),
-                      ComboBoxItem(value: 'خدمات', child: Text('خدمات')),
-                      ComboBoxItem(value: 'تبرعات', child: Text('تبرعات')),
-                      ComboBoxItem(value: 'مبيعات', child: Text('مبيعات')),
-                      ComboBoxItem(value: 'إيجارات', child: Text('إيجارات')),
-                      ComboBoxItem(value: 'استشارات', child: Text('استشارات')),
-                      ComboBoxItem(value: 'مشاريع', child: Text('مشاريع')),
-                      ComboBoxItem(value: 'أخرى', child: Text('أخرى')),
                     ],
-                    onChanged: (value) {
-                      setState(() => _selectedCategory = value);
-                    },
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: InfoLabel(
-                  label: 'بحث',
-                  child: TextBox(
-                    controller: _searchController,
-                    placeholder: 'البحث في تفاصيل الواردات...',
+                const SizedBox(width: 8),
+                // قائمة الفئات
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('الفئة'),
+                      const SizedBox(height: 8),
+                      ComboBox<String?>(
+                        placeholder: const Text('جميع الفئات'),
+                        value: _selectedCategory,
+                        items: const [
+                          ComboBoxItem<String?>(
+                            value: null,
+                            child: Text('جميع الفئات'),
+                          ),
+                          ComboBoxItem(
+                            value: 'رسوم دراسية',
+                            child: Text('رسوم دراسية'),
+                          ),
+                          ComboBoxItem(value: 'أنشطة', child: Text('أنشطة')),
+                          ComboBoxItem(value: 'خدمات', child: Text('خدمات')),
+                          ComboBoxItem(value: 'تبرعات', child: Text('تبرعات')),
+                          ComboBoxItem(value: 'مبيعات', child: Text('مبيعات')),
+                          ComboBoxItem(
+                            value: 'إيجارات',
+                            child: Text('إيجارات'),
+                          ),
+                          ComboBoxItem(
+                            value: 'استشارات',
+                            child: Text('استشارات'),
+                          ),
+                          ComboBoxItem(value: 'مشاريع', child: Text('مشاريع')),
+                          ComboBoxItem(value: 'أخرى', child: Text('أخرى')),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedCategory = value);
+                          _applyFilters();
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              FilledButton(
-                onPressed: () => print('سيتم إضافة نافذة إضافة الوارد'),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(FluentIcons.add, size: 16),
-                    SizedBox(width: 4),
-                    Text('إضافة وارد'),
-                  ],
+                const SizedBox(width: 8),
+                // تاريخ البداية
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('من تاريخ'),
+                      const SizedBox(height: 8),
+                      TextFormBox(
+                        controller: _startDateController,
+                        placeholder: 'اختر تاريخ البداية',
+                        readOnly: true,
+                        onTap: () => _selectDate(true),
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.calendar),
+                          onPressed: () => _selectDate(true),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Button(
-                onPressed: _clearFilters,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(FluentIcons.clear, size: 16),
-                    SizedBox(width: 4),
-                    Text('مسح الفلتر'),
-                  ],
+                const SizedBox(width: 8),
+                // تاريخ النهاية
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('إلى تاريخ'),
+                      const SizedBox(height: 8),
+                      TextFormBox(
+                        controller: _endDateController,
+                        placeholder: 'اختر تاريخ النهاية',
+                        readOnly: true,
+                        onTap: () => _selectDate(false),
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.calendar),
+                          onPressed: () => _selectDate(false),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Button(
-                onPressed: _applyFilters,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(FluentIcons.filter, size: 16),
-                    SizedBox(width: 4),
-                    Text('تطبيق الفلتر'),
-                  ],
+                const SizedBox(width: 8),
+                // حقل البحث
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('ابحث'),
+                      const SizedBox(height: 8),
+                      TextBox(
+                        controller: _searchController,
+                        placeholder: 'البحث في العنوان أو الوصف...',
+                        onChanged: (value) => _applyFilters(),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Button(
-                onPressed: _loadData,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(FluentIcons.refresh, size: 16),
-                    SizedBox(width: 4),
-                    Text('تحديث'),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildIncomesList() {
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Button(
+          onPressed: _clearFilters,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.clear_filter, size: 16),
+              SizedBox(width: 8),
+              Text('مسح المرشح'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: _loadData,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.refresh, size: 16),
+              SizedBox(width: 8),
+              Text('تحديث'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        FilledButton(
+          onPressed: () => print('سيتم إضافة نافذة إضافة الوارد'),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.add, size: 16),
+              SizedBox(width: 8),
+              Text('إضافة وارد جديد'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: () {
+            // TODO: تصدير التقرير
+          },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.document, size: 16),
+              SizedBox(width: 8),
+              Text('تقرير مالي'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIncomesTable() {
     if (_isLoading) {
-      return const Center(
-        child: Padding(padding: EdgeInsets.all(32), child: ProgressRing()),
-      );
+      return const Center(child: ProgressRing());
     }
 
     if (_filteredIncomes.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              Icon(
-                FluentIcons.inbox,
-                size: 64,
-                color: FluentTheme.of(context).inactiveColor,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(FluentIcons.money, size: 64, color: Colors.grey[120]),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد واردات خارجية',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[120],
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'لا توجد واردات خارجية',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: FluentTheme.of(context).inactiveColor,
-                ),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'لم يتم العثور على واردات تطابق معايير البحث المحددة',
+              style: TextStyle(fontSize: 14, color: Colors.grey[100]),
+            ),
+          ],
         ),
       );
     }
@@ -369,18 +528,19 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
     return Container(
       decoration: BoxDecoration(
         color: FluentTheme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
       ),
       child: Column(
         children: [
-          // Header
+          // رأس الجدول
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: FluentTheme.of(context).accentColor.withOpacity(0.1),
+              color: Colors.green.light,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
             child: const Row(
@@ -389,103 +549,111 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
                   flex: 1,
                   child: Text(
                     'م',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'نوع الوارد',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    'العنوان',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'المبلغ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 1,
                   child: Text(
                     'الفئة',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'الوصف',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 1,
                   child: Text(
                     'التاريخ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'المدرسة',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 1,
                   child: Text(
                     'الإجراءات',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          // Body
+
+          // صفوف البيانات
           Expanded(
             child: ListView.builder(
               itemCount: _filteredIncomes.length,
               itemBuilder: (context, index) {
                 final income = _filteredIncomes[index];
                 return Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.grey.withOpacity(0.3),
-                        width: 0.5,
-                      ),
-                    ),
+                    border: Border(bottom: BorderSide(color: Colors.grey[50])),
                   ),
                   child: Row(
                     children: [
                       Expanded(flex: 1, child: Text('${index + 1}')),
                       Expanded(
                         flex: 2,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: FluentTheme.of(
-                              context,
-                            ).accentColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            income.incomeType,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
+                        child: Text(
+                          income.title,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${NumberFormat('#,##0.00').format(income.amount)} د.ع',
+                          '${NumberFormat('#,###').format(income.amount)} د.ع',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -497,7 +665,7 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: FluentTheme.of(context).micaBackgroundColor,
+                            color: Colors.blue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -524,7 +692,7 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
                       Expanded(
                         flex: 2,
                         child: Text(
-                          income.schoolName ?? '-',
+                          _getSchoolName(income.schoolId),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
@@ -557,102 +725,59 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
     );
   }
 
-  Widget _buildSummaryCard() {
-    final displayedTotal = _filteredIncomes.fold<double>(
-      0.0,
-      (sum, income) => sum + income.amount,
-    );
-    final displayedAverage = _filteredIncomes.isNotEmpty
-        ? displayedTotal / _filteredIncomes.length
-        : 0.0;
-    final largestAmount = _filteredIncomes.isNotEmpty
-        ? _filteredIncomes.map((i) => i.amount).reduce((a, b) => a > b ? a : b)
-        : 0.0;
-
+  Widget _buildSummarySection() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: FluentTheme.of(context).micaBackgroundColor,
-        borderRadius: BorderRadius.circular(8),
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'ملخص البيانات المعروضة',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _buildSummaryItem(
-                  'إجمالي مبالغ الواردات المعروضة',
-                  '${NumberFormat('#,##0.00').format(displayedTotal)} د.ع',
-                  FluentIcons.money,
-                ),
+              const Text(
+                'ملخص الواردات المعروضة',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSummaryItem(
-                  'متوسط قيمة الوارد الواحد',
-                  '${NumberFormat('#,##0.00').format(displayedAverage)} د.ع',
-                  FluentIcons.chart,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSummaryItem(
-                  'أكبر مبلغ وارد',
-                  '${NumberFormat('#,##0.00').format(largestAmount)} د.ع',
-                  FluentIcons.up,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSummaryItem(
-                  'آخر تحديث',
-                  DateFormat('dd/MM/yyyy - HH:mm').format(DateTime.now()),
-                  FluentIcons.clock,
-                ),
+              const SizedBox(height: 8),
+              Text(
+                'عدد الواردات: $_totalCount وارد',
+                style: TextStyle(fontSize: 14, color: Colors.grey[120]),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryItem(String title, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: FluentTheme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.light, Colors.green.dark],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'إجمالي المبلغ',
+                  style: TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                const SizedBox(height: 4),
+                Text(
+                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -664,27 +789,88 @@ class _ExternalIncomePageState extends State<ExternalIncomePage> {
     return Directionality(
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ScaffoldPage(
-        header: const PageHeader(title: Text('إدارة الواردات الخارجية')),
         content: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Column(
             children: [
-              _buildStatisticsCards(),
+              // شريط إدارة الواردات الخارجية
+              _buildManagementBar(),
               const SizedBox(height: 16),
+
+              // قسم التصفية والبحث
               _buildFilterSection(),
               const SizedBox(height: 16),
-              Expanded(
-                child: Column(
-                  children: [
-                    Expanded(child: _buildIncomesList()),
-                    const SizedBox(height: 16),
-                    _buildSummaryCard(),
-                  ],
-                ),
-              ),
+
+              // أزرار الإجراءات
+              _buildActionButtons(),
+              const SizedBox(height: 16),
+
+              // الجدول الرئيسي
+              Expanded(child: _buildIncomesTable()),
+
+              // معلومات التلخيص
+              _buildSummarySection(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildManagementBar() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'إدارة الواردات الخارجية',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'عرض وإدارة جميع الواردات الخارجية في النظام مع إمكانيات البحث والتصفية المتقدمة',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[120]),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.green.light,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'إجمالي الواردات',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
