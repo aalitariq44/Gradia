@@ -250,7 +250,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ScaffoldPage(
         content: Padding(
-          padding: const EdgeInsets.only(left: 16),
+          padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Column(
             children: [
               // الرأس والعنوان
