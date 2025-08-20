@@ -162,45 +162,47 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.8,
-        height: MediaQuery.of(context).size.height * 0.85,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'إضافة وارد خارجي جديد',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+      child: Material(
+        type: MaterialType.card,
+        color: Colors.transparent,
+        child: Container(
+          width: 500,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'إضافة وارد خارجي جديد',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'يرجى ملء الحقول المطلوبة (*) لإضافة وارد جديد',
-                    style: TextStyle(fontSize: 14, color: Colors.white70),
-                  ),
-                ],
+                    SizedBox(height: 4),
+                    Text(
+                      'يرجى ملء الحقول المطلوبة (*) لإضافة وارد جديد',
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Form
-            Expanded(
-              child: _isLoading
+              // Form
+              _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : Form(
                       key: _formKey,
@@ -420,49 +422,49 @@ class _AddExternalIncomeDialogState extends State<AddExternalIncomeDialog> {
                         ),
                       ),
                     ),
-            ),
 
-            // Action Buttons
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _isSubmitting
-                      ? null
-                      : () => Navigator.of(context).pop(false),
-                  child: const Text(
-                    'إلغاء',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: _isSubmitting ? null : _saveIncome,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
+              // Action Buttons
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(false),
+                    child: const Text(
+                      'إلغاء',
+                      style: TextStyle(color: Colors.grey),
                     ),
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: _isSubmitting ? null : _saveIncome,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
-                          ),
-                        )
-                      : const Text('حفظ الوارد'),
-                ),
-              ],
-            ),
-          ],
+                          )
+                        : const Text('حفظ الوارد'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
