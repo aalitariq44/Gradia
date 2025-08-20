@@ -190,18 +190,10 @@ class PrintingService {
         border: pw.Border(top: pw.BorderSide(color: PdfColors.grey)),
       ),
       child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: pw.MainAxisAlignment.center,
         children: [
           pw.Text(
             'نظام إدارة مدارس Gradia',
-            style: pw.TextStyle(
-              font: _arabicFont,
-              fontSize: config.fontSize - 2,
-              color: PdfColors.grey600,
-            ),
-          ),
-          pw.Text(
-            'تم الطباعة في ${_formatDateTime(DateTime.now())}',
             style: pw.TextStyle(
               font: _arabicFont,
               fontSize: config.fontSize - 2,

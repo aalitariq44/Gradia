@@ -227,8 +227,6 @@ class StudentPrintingService {
       subtitleParts.add('(مصفى)');
     }
 
-    subtitleParts.add('- تاريخ الطباعة: ${_formatDate(DateTime.now())}');
-
     return subtitleParts.join(' ');
   }
 

@@ -933,10 +933,10 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
 
   // متحكمات النموذج
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _nationalIdController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _totalFeeController = TextEditingController();
-  final TextEditingController _academicYearController = TextEditingController();
+  final TextEditingController _academicYearController =
+      TextEditingController(text: '2025-2026');
 
   School? _selectedSchool;
   String _selectedGender = 'ذكر';
@@ -1000,7 +1000,6 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
   @override
   void dispose() {
     _nameController.dispose();
-    _nationalIdController.dispose();
     _phoneController.dispose();
     _totalFeeController.dispose();
     _academicYearController.dispose();
@@ -1019,15 +1018,11 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
     try {
       final student = Student(
         name: _nameController.text.trim(),
-        nationalIdNumber: _nationalIdController.text.trim().isEmpty
-            ? null
-            : _nationalIdController.text.trim(),
+        nationalIdNumber: null, // تم الحذف
         schoolId: _selectedSchool!.id!,
         grade: _selectedGrade,
         section: _selectedSection,
-        academicYear: _academicYearController.text.trim().isEmpty
-            ? null
-            : _academicYearController.text.trim(),
+        academicYear: _academicYearController.text.trim(),
         gender: _selectedGender,
         phone: _phoneController.text.trim().isEmpty
             ? null
@@ -1114,41 +1109,23 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                   ),
                   const SizedBox(height: 12),
 
-                  Row(
-                    children: [
-                      // الرقم الوطني
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'الرقم الوطني',
-                          child: TextFormBox(
-                            controller: _nationalIdController,
-                            placeholder: 'أدخل الرقم الوطني (اختياري)',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-
-                      // الجنس
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'الجنس *',
-                          child: ComboBox<String>(
-                            value: _selectedGender,
-                            items: _genders
-                                .map(
-                                  (gender) => ComboBoxItem<String>(
-                                    value: gender,
-                                    child: Text(gender),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => _selectedGender = value!);
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                  // الجنس
+                  InfoLabel(
+                    label: 'الجنس *',
+                    child: ComboBox<String>(
+                      value: _selectedGender,
+                      items: _genders
+                          .map(
+                            (gender) => ComboBoxItem<String>(
+                              value: gender,
+                              child: Text(gender),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() => _selectedGender = value!);
+                      },
+                    ),
                   ),
                   const SizedBox(height: 20),
 
@@ -1265,7 +1242,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                           label: 'السنة الدراسية',
                           child: TextFormBox(
                             controller: _academicYearController,
-                            placeholder: 'مثال: 2024-2025',
+                            enabled: false,
                           ),
                         ),
                       ),
