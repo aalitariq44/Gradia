@@ -71,22 +71,7 @@ class SchoolService {
     );
   }
 
-  Future<int> deleteSchool(int id) async {
-    final db = await _databaseHelper.database;
-
-    // التحقق من وجود طلاب مرتبطين بهذه المدرسة
-    final students = await db.query(
-      'students',
-      where: 'school_id = ?',
-      whereArgs: [id],
-    );
-
-    if (students.isNotEmpty) {
-      throw Exception('لا يمكن حذف المدرسة لوجود طلاب مسجلين بها');
-    }
-
-    return await db.delete('schools', where: 'id = ?', whereArgs: [id]);
-  }
+  
 
   Future<List<School>> searchSchools(String query) async {
     final db = await _databaseHelper.database;

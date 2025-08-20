@@ -1,4 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:gradia/pages/edit_school_dialog.dart';
+
 import '../models/school_model.dart';
 import '../services/school_service.dart';
 import '../generated/app_localizations.dart';
@@ -82,17 +84,7 @@ class _SchoolsPageState extends State<SchoolsPage> {
     }
   }
 
-  Future<void> _deleteSchool(int id) async {
-    final localizations = AppLocalizations.of(context)!;
-
-    try {
-      await _schoolService.deleteSchool(id);
-      _loadSchools();
-      _showSuccessMessage(localizations.schoolDeleted);
-    } catch (e) {
-      _showErrorDialog('${localizations.errorDeletingSchool}: $e');
-    }
-  }
+  
 
   void _clearForm() {
     _nameArController.clear();
@@ -229,6 +221,18 @@ class _SchoolsPageState extends State<SchoolsPage> {
     );
   }
 
+  void _showEditSchoolDialog(School school) {
+    showDialog(
+      context: context,
+      builder: (context) => EditSchoolDialog(
+        school: school,
+        onSchoolUpdated: () {
+          _loadSchools();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
@@ -327,41 +331,7 @@ class _SchoolsPageState extends State<SchoolsPage> {
                           IconButton(
                             icon: const Icon(FluentIcons.edit),
                             onPressed: () {
-                              // TODO: Implement edit functionality
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              FluentIcons.delete,
-                              color: Colors.red.normal,
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => ContentDialog(
-                                  title: Text(localizations.confirmDelete),
-                                  content: Text(
-                                    'هل أنت متأكد من حذف مدرسة ${school.nameAr}؟',
-                                  ),
-                                  actions: [
-                                    Button(
-                                      child: Text(localizations.cancel),
-                                      onPressed: () => Navigator.pop(context),
-                                    ),
-                                    FilledButton(
-                                      style: ButtonStyle(
-                                        backgroundColor:
-                                            WidgetStateProperty.all(Colors.red),
-                                      ),
-                                      child: Text(localizations.delete),
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                        _deleteSchool(school.id!);
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              );
+                              _showEditSchoolDialog(school);
                             },
                           ),
                         ],
