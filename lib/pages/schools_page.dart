@@ -2,6 +2,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import '../models/school_model.dart';
 import '../services/school_service.dart';
 import '../generated/app_localizations.dart';
+import '../utils/app_text_styles.dart';
 
 class SchoolsPage extends StatefulWidget {
   const SchoolsPage({Key? key}) : super(key: key);
@@ -149,42 +150,45 @@ class _SchoolsPageState extends State<SchoolsPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('اسم المدرسة (عربي) *'),
+                  Text('اسم المدرسة (عربي) *', style: AppTextStyles.inputLabel),
                   const SizedBox(height: 8),
                   TextBox(
                     controller: _nameArController,
                     placeholder: 'أدخل اسم المدرسة بالعربية',
                   ),
                   const SizedBox(height: 16),
-                  Text('اسم المدرسة (إنجليزي)'),
+                  Text(
+                    'اسم المدرسة (إنجليزي)',
+                    style: AppTextStyles.inputLabel,
+                  ),
                   const SizedBox(height: 8),
                   TextBox(
                     controller: _nameEnController,
                     placeholder: 'أدخل اسم المدرسة بالإنجليزية',
                   ),
                   const SizedBox(height: 16),
-                  Text('العنوان'),
+                  Text('العنوان', style: AppTextStyles.inputLabel),
                   const SizedBox(height: 8),
                   TextBox(
                     controller: _addressController,
                     placeholder: 'أدخل عنوان المدرسة',
                   ),
                   const SizedBox(height: 16),
-                  Text('رقم الهاتف'),
+                  Text('رقم الهاتف', style: AppTextStyles.inputLabel),
                   const SizedBox(height: 8),
                   TextBox(
                     controller: _phoneController,
                     placeholder: 'أدخل رقم الهاتف',
                   ),
                   const SizedBox(height: 16),
-                  Text('اسم المدير'),
+                  Text('اسم المدير', style: AppTextStyles.inputLabel),
                   const SizedBox(height: 8),
                   TextBox(
                     controller: _principalNameController,
                     placeholder: 'أدخل اسم مدير المدرسة',
                   ),
                   const SizedBox(height: 16),
-                  Text('أنواع المدرسة *'),
+                  Text('أنواع المدرسة *', style: AppTextStyles.inputLabel),
                   const SizedBox(height: 8),
                   ...School.availableSchoolTypes
                       .map(
@@ -264,17 +268,13 @@ class _SchoolsPageState extends State<SchoolsPage> {
                     const SizedBox(height: 16),
                     Text(
                       localizations.noSchoolsRegistered,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTextStyles.headline5,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       localizations.clickAddSchoolToStart,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF605E5C),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppTextColors.secondary,
                       ),
                     ),
                   ],
@@ -302,10 +302,7 @@ class _SchoolsPageState extends State<SchoolsPage> {
                       ),
                       title: Text(
                         school.nameAr,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
+                        style: AppTextStyles.headline6,
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

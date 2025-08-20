@@ -3,6 +3,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/app_localizations.dart';
 import 'pages/schools_page.dart';
 import 'pages/students_page.dart';
+import 'pages/font_demo_page.dart';
+import 'utils/font_config.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,8 +17,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return FluentApp(
       title: 'Gradia - إدارة المدارس الأهلية',
-      theme: FluentThemeData.light(),
-      darkTheme: FluentThemeData.dark(),
+
+      // Custom theme with Cairo font
+      theme: FontConfig.createLightTheme(),
+      darkTheme: FontConfig.createDarkTheme(),
 
       // Arabic localization support
       locale: const Locale('ar', 'SA'),
@@ -101,6 +105,11 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         icon: const Icon(FluentIcons.refresh),
         title: const Text('النسخ الاحتياطي'),
         body: Center(child: const Text('صفحة النسخ الاحتياطي قيد التطوير')),
+      ),
+      PaneItem(
+        icon: const Icon(FluentIcons.font_size),
+        title: const Text('عرض الخطوط'),
+        body: const FontDemoPage(),
       ),
     ];
 
