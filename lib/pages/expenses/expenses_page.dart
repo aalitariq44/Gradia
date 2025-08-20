@@ -30,29 +30,6 @@ class _ExpensesPageState extends State<ExpensesPage> {
   DateTime? _startDate;
   DateTime? _endDate;
 
-  double get _monthlyAmount {
-    final now = DateTime.now();
-    final currentMonth = DateTime(now.year, now.month);
-    final nextMonth = DateTime(now.year, now.month + 1);
-
-    return _allExpenses
-        .where(
-          (expense) =>
-              expense.expenseDate.isAfter(
-                currentMonth.subtract(const Duration(days: 1)),
-              ) &&
-              expense.expenseDate.isBefore(nextMonth),
-        )
-        .fold(0.0, (sum, expense) => sum + expense.amount);
-  }
-
-  double get _yearlyAmount {
-    final now = DateTime.now();
-    return _allExpenses
-        .where((expense) => expense.expenseDate.year == now.year)
-        .fold(0.0, (sum, expense) => sum + expense.amount);
-  }
-
   final DateFormat _displayDateFormatter = DateFormat('dd/MM/yyyy');
 
   @override
@@ -158,6 +135,77 @@ class _ExpensesPageState extends State<ExpensesPage> {
       _endDate = null;
       _filteredExpenses = _allExpenses;
     });
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        FilledButton(
+          onPressed: () => _showAddExpenseDialog(),
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(Colors.red),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.add, size: 16),
+              SizedBox(width: 8),
+              Text('إضافة مصروف'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: _clearFilters,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.clear_filter, size: 16),
+              SizedBox(width: 8),
+              Text('مسح المرشح'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: _applyFilters,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.filter, size: 16),
+              SizedBox(width: 8),
+              Text('تطبيق الفلتر'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: _loadData,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.refresh, size: 16),
+              SizedBox(width: 8),
+              Text('تحديث'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Button(
+          onPressed: () {
+            // TODO: تصدير التقرير
+          },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.document, size: 16),
+              SizedBox(width: 8),
+              Text('تقرير مالي'),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _showAddExpenseDialog({ExpenseModel? expense}) async {
@@ -268,102 +316,57 @@ class _ExpensesPageState extends State<ExpensesPage> {
     }
   }
 
-  Widget _buildStatisticsCards() {
+  Widget _buildManagementBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: FluentTheme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          const Text(
-            'إدارة المصروفات',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'إدارة المصروفات',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'عرض وإدارة جميع المصروفات في النظام مع إمكانيات البحث والتصفية المتقدمة',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[120]),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatisticCard(
-                  'إجمالي المصروفات (الشهر الحالي)',
-                  '${NumberFormat('#,##0.00').format(_monthlyAmount)} د.ع',
-                  FluentIcons.calendar,
-                  Colors.red,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatisticCard(
-                  'إجمالي المصروفات (العام الحالي)',
-                  '${NumberFormat('#,##0.00').format(_yearlyAmount)} د.ع',
-                  FluentIcons.calendar,
-                  Colors.red,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatisticCard(
-                  'عدد السجلات المعروضة',
-                  '${_filteredExpenses.length}',
-                  FluentIcons.number,
-                  Colors.red,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Button(
-                  onPressed: _loadData,
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(FluentIcons.refresh, size: 16),
-                      SizedBox(width: 4),
-                      Text('تحديث'),
-                    ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.red.light,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'إجمالي المصروفات',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatisticCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 12)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
+                const SizedBox(height: 4),
+                Text(
+                  '${NumberFormat('#,##0.00').format(_filteredExpenses.fold<double>(0.0, (sum, expense) => sum + expense.amount))} د.ع',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -375,173 +378,163 @@ class _ExpensesPageState extends State<ExpensesPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: FluentTheme.of(context).micaBackgroundColor,
-        borderRadius: BorderRadius.circular(8),
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'تصفية وبحث',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            'التصفية والبحث',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: InfoLabel(
-                  label: 'المدرسة',
-                  child: ComboBox<int>(
-                    placeholder: const Text('جميع المدارس'),
-                    value: _selectedSchoolId,
-                    items: _schools
-                        .map(
-                          (school) => ComboBoxItem<int>(
-                            value: school.id!,
-                            child: Text(school.nameAr),
+
+          // Filters row with right alignment and fixed widths
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // قائمة المدارس
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('المدرسة'),
+                      const SizedBox(height: 8),
+                      ComboBox<int?>(
+                        placeholder: const Text('جميع المدارس'),
+                        value: _selectedSchoolId,
+                        items: [
+                          const ComboBoxItem<int?>(
+                            value: null,
+                            child: Text('جميع المدارس'),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedSchoolId = value);
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: InfoLabel(
-                  label: 'نوع المصروف',
-                  child: ComboBox<String>(
-                    placeholder: const Text('جميع الأنواع'),
-                    value: _selectedExpenseType,
-                    items: ExpenseTypes.allTypes
-                        .map(
-                          (type) => ComboBoxItem<String>(
-                            value: type,
-                            child: Text(type),
+                          ..._schools.map(
+                            (school) => ComboBoxItem<int?>(
+                              value: school.id,
+                              child: Text(school.nameAr),
+                            ),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedExpenseType = value);
-                    },
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSchoolId = value;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: InfoLabel(
-                  label: 'بحث',
-                  child: TextBox(
-                    controller: _searchController,
-                    placeholder: 'البحث في تفاصيل المصروفات...',
+                const SizedBox(width: 8),
+                // نوع المصروف
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('نوع المصروف'),
+                      const SizedBox(height: 8),
+                      ComboBox<String?>(
+                        placeholder: const Text('جميع الأنواع'),
+                        value: _selectedExpenseType,
+                        items: [
+                          const ComboBoxItem<String?>(
+                            value: null,
+                            child: Text('جميع الأنواع'),
+                          ),
+                          ...ExpenseTypes.allTypes.map(
+                            (type) => ComboBoxItem<String?>(
+                              value: type,
+                              child: Text(type),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedExpenseType = value);
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: InfoLabel(
-                  label: 'من تاريخ',
-                  child: Button(
-                    onPressed: _selectStartDate,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _startDate != null
-                              ? _displayDateFormatter.format(_startDate!)
-                              : 'اختر التاريخ',
+                const SizedBox(width: 8),
+                // تاريخ البداية
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('من تاريخ'),
+                      const SizedBox(height: 8),
+                      Button(
+                        onPressed: _selectStartDate,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _startDate != null
+                                  ? _displayDateFormatter.format(_startDate!)
+                                  : 'اختر التاريخ',
+                            ),
+                            const Icon(FluentIcons.calendar),
+                          ],
                         ),
-                        const Icon(FluentIcons.calendar),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: InfoLabel(
-                  label: 'إلى تاريخ',
-                  child: Button(
-                    onPressed: _selectEndDate,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _endDate != null
-                              ? _displayDateFormatter.format(_endDate!)
-                              : 'اختر التاريخ',
+                const SizedBox(width: 8),
+                // تاريخ النهاية
+                SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('إلى تاريخ'),
+                      const SizedBox(height: 8),
+                      Button(
+                        onPressed: _selectEndDate,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _endDate != null
+                                  ? _displayDateFormatter.format(_endDate!)
+                                  : 'اختر التاريخ',
+                            ),
+                            const Icon(FluentIcons.calendar),
+                          ],
                         ),
-                        const Icon(FluentIcons.calendar),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              FilledButton(
-                onPressed: () => _showAddExpenseDialog(),
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(Colors.red),
+                const SizedBox(width: 8),
+                // حقل البحث
+                SizedBox(
+                  width: 200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('ابحث'),
+                      const SizedBox(height: 8),
+                      TextBox(
+                        controller: _searchController,
+                        placeholder: 'البحث في تفاصيل المصروفات...',
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.search),
+                          onPressed: _applyFilters,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(FluentIcons.add, size: 16),
-                    SizedBox(width: 4),
-                    Text('إضافة مصروف'),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Button(
-                onPressed: _clearFilters,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(FluentIcons.clear, size: 16),
-                    SizedBox(width: 4),
-                    Text('مسح الفلتر'),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Button(
-                onPressed: _applyFilters,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(FluentIcons.filter, size: 16),
-                    SizedBox(width: 4),
-                    Text('تطبيق الفلتر'),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              Button(
-                onPressed: () => print('سيتم إضافة تصدير التقرير'),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(FluentIcons.export, size: 16),
-                    SizedBox(width: 4),
-                    Text('تصدير التقرير'),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -550,32 +543,30 @@ class _ExpensesPageState extends State<ExpensesPage> {
 
   Widget _buildExpensesList() {
     if (_isLoading) {
-      return const Center(
-        child: Padding(padding: EdgeInsets.all(32), child: ProgressRing()),
-      );
+      return const Center(child: ProgressRing());
     }
 
     if (_filteredExpenses.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              Icon(
-                FluentIcons.inbox,
-                size: 64,
-                color: FluentTheme.of(context).inactiveColor,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(FluentIcons.money, size: 64, color: Colors.grey[120]),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد مصروفات',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[120],
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'لا توجد مصروفات',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: FluentTheme.of(context).inactiveColor,
-                ),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'لم يتم العثور على مصروفات تطابق معايير البحث المحددة',
+              style: TextStyle(fontSize: 14, color: Colors.grey[100]),
+            ),
+          ],
         ),
       );
     }
@@ -583,18 +574,19 @@ class _ExpensesPageState extends State<ExpensesPage> {
     return Container(
       decoration: BoxDecoration(
         color: FluentTheme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
       ),
       child: Column(
         children: [
-          // Header
+          // رأس الجدول
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
+              color: Colors.red.light,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
             child: const Row(
@@ -602,81 +594,103 @@ class _ExpensesPageState extends State<ExpensesPage> {
                 Expanded(
                   flex: 1,
                   child: Text(
-                    'م',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    'تسلسل',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'نوع المصروف',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'المبلغ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'الوصف',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
-                  flex: 1,
+                  flex: 2,
                   child: Text(
                     'التاريخ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'المدرسة',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
-                  flex: 1,
+                  flex: 2,
                   child: Text(
                     'ملاحظات',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 Expanded(
-                  flex: 1,
+                  flex: 2,
                   child: Text(
                     'الإجراءات',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          // Body
+
+          // صفوف البيانات
           Expanded(
             child: ListView.builder(
               itemCount: _filteredExpenses.length,
               itemBuilder: (context, index) {
                 final expense = _filteredExpenses[index];
                 return Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.grey.withOpacity(0.3),
-                        width: 0.5,
-                      ),
-                    ),
+                    border: Border(bottom: BorderSide(color: Colors.grey[50])),
                   ),
                   child: Row(
                     children: [
+                      // تسلسل
                       Expanded(flex: 1, child: Text('${index + 1}')),
+                      // نوع المصروف
                       Expanded(
                         flex: 2,
                         child: Container(
@@ -697,16 +711,18 @@ class _ExpensesPageState extends State<ExpensesPage> {
                           ),
                         ),
                       ),
+                      // المبلغ
                       Expanded(
                         flex: 2,
                         child: Text(
                           '${NumberFormat('#,##0.00').format(expense.amount)} د.ع',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.red,
+                            color: Colors.red.dark,
                           ),
                         ),
                       ),
+                      // الوصف
                       Expanded(
                         flex: 2,
                         child: Text(
@@ -715,13 +731,14 @@ class _ExpensesPageState extends State<ExpensesPage> {
                           maxLines: 1,
                         ),
                       ),
+                      // التاريخ
                       Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: Text(
                           _displayDateFormatter.format(expense.expenseDate),
-                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
+                      // المدرسة
                       Expanded(
                         flex: 2,
                         child: Text(
@@ -730,17 +747,22 @@ class _ExpensesPageState extends State<ExpensesPage> {
                           maxLines: 1,
                         ),
                       ),
+                      // الملاحظات
                       Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: Text(
                           expense.notes ?? '-',
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.grey[120],
+                            fontSize: 13,
+                          ),
                         ),
                       ),
+                      // الإجراءات
                       Expanded(
-                        flex: 1,
+                        flex: 2,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -772,109 +794,58 @@ class _ExpensesPageState extends State<ExpensesPage> {
       0.0,
       (sum, expense) => sum + expense.amount,
     );
-    final displayedAverage = _filteredExpenses.isNotEmpty
-        ? displayedTotal / _filteredExpenses.length
-        : 0.0;
-    final largestAmount = _filteredExpenses.isNotEmpty
-        ? _filteredExpenses.map((e) => e.amount).reduce((a, b) => a > b ? a : b)
-        : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: FluentTheme.of(context).micaBackgroundColor,
-        borderRadius: BorderRadius.circular(8),
+        color: FluentTheme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[100]),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'ملخص البيانات المعروضة',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _buildSummaryItem(
-                  'إجمالي مبالغ المصروفات المعروضة',
-                  '${NumberFormat('#,##0.00').format(displayedTotal)} د.ع',
-                  FluentIcons.money,
-                  Colors.red,
-                ),
+              const Text(
+                'ملخص المصروفات المعروضة',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSummaryItem(
-                  'متوسط قيمة المصروف الواحد',
-                  '${NumberFormat('#,##0.00').format(displayedAverage)} د.ع',
-                  FluentIcons.chart,
-                  Colors.red,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSummaryItem(
-                  'أكبر مبلغ مصروف',
-                  '${NumberFormat('#,##0.00').format(largestAmount)} د.ع',
-                  FluentIcons.up,
-                  Colors.red,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSummaryItem(
-                  'آخر تحديث',
-                  DateFormat('dd/MM/yyyy - HH:mm').format(DateTime.now()),
-                  FluentIcons.clock,
-                  Colors.grey,
-                ),
+              const SizedBox(height: 8),
+              Text(
+                'عدد المصروفات: ${_filteredExpenses.length} مصروف',
+                style: TextStyle(fontSize: 14, color: Colors.grey[120]),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryItem(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: FluentTheme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.red.light, Colors.red.dark],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'إجمالي المبلغ',
+                  style: TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: color,
+                const SizedBox(height: 4),
+                Text(
+                  '${NumberFormat('#,##0.00').format(displayedTotal)} د.ع',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -887,24 +858,28 @@ class _ExpensesPageState extends State<ExpensesPage> {
     return Directionality(
       textDirection: flutter_widgets.TextDirection.rtl,
       child: ScaffoldPage(
-        header: const PageHeader(title: Text('إدارة المصروفات')),
+       
         content: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Column(
             children: [
-              _buildStatisticsCards(),
+              // شريط إدارة المصروفات
+              _buildManagementBar(),
               const SizedBox(height: 16),
+
+              // قسم التصفية والبحث
               _buildFilterSection(),
               const SizedBox(height: 16),
-              Expanded(
-                child: Column(
-                  children: [
-                    Expanded(child: _buildExpensesList()),
-                    const SizedBox(height: 16),
-                    _buildSummaryCard(),
-                  ],
-                ),
-              ),
+
+              // أزرار الإجراءات
+              _buildActionButtons(),
+              const SizedBox(height: 16),
+
+              // الجدول الرئيسي
+              Expanded(child: _buildExpensesList()),
+
+              // معلومات التلخيص
+              _buildSummaryCard(),
             ],
           ),
         ),
