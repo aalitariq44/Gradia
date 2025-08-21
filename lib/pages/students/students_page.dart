@@ -761,7 +761,10 @@ class _StudentsPageState extends State<StudentsPage> {
     }
 
     final allColumns = _printingService.getAllColumnHeaders();
-    List<String> selectedColumns = _printingService.getStudentColumnHeaders().keys.toList();
+    List<String> selectedColumns = _printingService
+        .getStudentColumnHeaders()
+        .keys
+        .toList();
 
     await showDialog(
       context: context,
@@ -855,11 +858,14 @@ class _StudentsPageState extends State<StudentsPage> {
       final filters = <String, dynamic>{};
 
       if (_selectedSchoolId != null) {
-        final school = _schools.firstWhere((s) => s.id == _selectedSchoolId,
-            orElse: () => School(
-                nameAr: 'غير معروف',
-                schoolTypes: [],
-                createdAt: DateTime.now()));
+        final school = _schools.firstWhere(
+          (s) => s.id == _selectedSchoolId,
+          orElse: () => School(
+            nameAr: 'غير معروف',
+            schoolTypes: [],
+            createdAt: DateTime.now(),
+          ),
+        );
         filters['schoolName'] = school.nameAr;
       }
 
@@ -935,8 +941,9 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _totalFeeController = TextEditingController();
-  final TextEditingController _academicYearController =
-      TextEditingController(text: '2025-2026');
+  final TextEditingController _academicYearController = TextEditingController(
+    text: '2025-2026',
+  );
 
   School? _selectedSchool;
   String _selectedGender = 'ذكر';

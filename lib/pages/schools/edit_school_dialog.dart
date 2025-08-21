@@ -1,4 +1,3 @@
-
 import 'package:fluent_ui/fluent_ui.dart';
 import '../../models/school_model.dart';
 import '../../services/school_service.dart';
@@ -8,8 +7,11 @@ class EditSchoolDialog extends StatefulWidget {
   final School school;
   final VoidCallback onSchoolUpdated;
 
-  const EditSchoolDialog(
-      {super.key, required this.school, required this.onSchoolUpdated});
+  const EditSchoolDialog({
+    super.key,
+    required this.school,
+    required this.onSchoolUpdated,
+  });
 
   @override
   State<EditSchoolDialog> createState() => _EditSchoolDialogState();
@@ -103,10 +105,7 @@ class _EditSchoolDialogState extends State<EditSchoolDialog> {
                 placeholder: 'أدخل اسم المدرسة بالعربية',
               ),
               const SizedBox(height: 16),
-              Text(
-                'اسم المدرسة (إنجليزي)',
-                style: AppTextStyles.inputLabel,
-              ),
+              Text('اسم المدرسة (إنجليزي)', style: AppTextStyles.inputLabel),
               const SizedBox(height: 8),
               TextBox(
                 controller: _nameEnController,
@@ -134,12 +133,16 @@ class _EditSchoolDialogState extends State<EditSchoolDialog> {
                 placeholder: 'أدخل اسم مدير المدرسة',
               ),
               const SizedBox(height: 16),
-              Text('أنواع المدرسة (لا يمكن تعديلها)',
-                  style: AppTextStyles.inputLabel),
+              Text(
+                'أنواع المدرسة (لا يمكن تعديلها)',
+                style: AppTextStyles.inputLabel,
+              ),
               const SizedBox(height: 8),
               Text(
                 widget.school.schoolTypesDisplay,
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey[100]),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.grey[100],
+                ),
               ),
             ],
           ),

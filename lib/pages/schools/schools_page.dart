@@ -84,8 +84,6 @@ class _SchoolsPageState extends State<SchoolsPage> {
     }
   }
 
-  
-
   void _clearForm() {
     _nameArController.clear();
     _nameEnController.clear();
