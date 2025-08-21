@@ -1,38 +1,40 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../models/teacher_model.dart';
-import '../models/school_model.dart';
-import '../services/teacher_service.dart';
-import '../services/school_service.dart';
-import 'add_teacher_dialog.dart';
-import 'edit_teacher_dialog.dart';
+import '../../models/employee_model.dart';
+import '../../models/school_model.dart';
+import '../../services/employee_service.dart';
+import '../../services/school_service.dart';
+import 'add_employee_dialog.dart';
+import 'edit_employee_dialog.dart';
 
-class TeachersPage extends StatefulWidget {
-  const TeachersPage({super.key});
+class EmployeesPage extends StatefulWidget {
+  const EmployeesPage({Key? key}) : super(key: key);
 
   @override
-  State<TeachersPage> createState() => _TeachersPageState();
+  State<EmployeesPage> createState() => _EmployeesPageState();
 }
 
-class _TeachersPageState extends State<TeachersPage> {
-  final TeacherService _teacherService = TeacherService();
+class _EmployeesPageState extends State<EmployeesPage> {
+  final EmployeeService _employeeService = EmployeeService();
   final SchoolService _schoolService = SchoolService();
 
-  List<Teacher> _teachers = [];
-  List<Teacher> _filteredTeachers = [];
+  List<Employee> _employees = [];
+  List<Employee> _filteredEmployees = [];
   List<School> _schools = [];
+  List<String> _jobTypes = [];
   bool _isLoading = false;
 
   // متحكمات التصفية
   int? _selectedSchoolId;
+  String? _selectedJobType;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   // الإحصائيات
-  int _totalTeachers = 0;
-  int _totalClassHours = 0;
+  int _totalEmployees = 0;
   double _totalSalaries = 0.0;
+  int _totalCount = 0;
 
   @override
   void initState() {
@@ -40,18 +42,11 @@ class _TeachersPageState extends State<TeachersPage> {
     _loadData();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      await Future.wait([_loadTeachers(), _loadSchools()]);
+      await Future.wait([_loadEmployees(), _loadSchools(), _loadJobTypes()]);
       _applyFilters();
-      await _loadStatistics();
     } catch (e) {
       _showErrorDialog('خطأ في تحميل البيانات: $e');
     } finally {
@@ -59,51 +54,59 @@ class _TeachersPageState extends State<TeachersPage> {
     }
   }
 
-  Future<void> _loadTeachers() async {
-    _teachers = await _teacherService.getAllTeachers();
+  Future<void> _loadEmployees() async {
+    _employees = await _employeeService.getAllEmployees();
+    _totalEmployees = await _employeeService.getEmployeesCount();
+    _totalSalaries = await _employeeService.getTotalSalaries();
   }
 
   Future<void> _loadSchools() async {
     _schools = await _schoolService.getAllSchools();
   }
 
-  Future<void> _loadStatistics() async {
-    final totalTeachers = await _teacherService.getTeachersCount();
-    final totalClassHours = await _teacherService.getTotalClassHours();
-    final totalSalaries = await _teacherService.getTotalSalaries();
-
-    setState(() {
-      _totalTeachers = totalTeachers;
-      _totalClassHours = totalClassHours;
-      _totalSalaries = totalSalaries;
-    });
+  Future<void> _loadJobTypes() async {
+    _jobTypes = await _employeeService.getDistinctJobTypes();
   }
 
   void _applyFilters() {
-    List<Teacher> filtered = List.from(_teachers);
+    List<Employee> filtered = List.from(_employees);
 
     // تصفية حسب المدرسة
     if (_selectedSchoolId != null) {
       filtered = filtered
-          .where((teacher) => teacher.schoolId == _selectedSchoolId)
+          .where((e) => e.schoolId == _selectedSchoolId)
           .toList();
     }
 
-    // تصفية حسب البحث (اسم المعلم)
+    // تصفية حسب المهنة
+    if (_selectedJobType != null && _selectedJobType!.isNotEmpty) {
+      filtered = filtered.where((e) => e.jobType == _selectedJobType).toList();
+    }
+
+    // تصفية حسب البحث (اسم الموظف)
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((teacher) {
-        return teacher.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      filtered = filtered.where((e) {
+        final employeeName = e.name.toLowerCase();
+        final schoolName = _getSchoolName(e.schoolId).toLowerCase();
+        return employeeName.contains(_searchQuery.toLowerCase()) ||
+            schoolName.contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
     setState(() {
-      _filteredTeachers = filtered;
+      _filteredEmployees = filtered;
+      _calculateTotals();
     });
+  }
+
+  void _calculateTotals() {
+    _totalCount = _filteredEmployees.length;
   }
 
   void _clearFilters() {
     setState(() {
       _selectedSchoolId = null;
+      _selectedJobType = null;
       _searchController.clear();
       _searchQuery = '';
     });
@@ -126,22 +129,6 @@ class _TeachersPageState extends State<TeachersPage> {
     );
   }
 
-  void _showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => ContentDialog(
-        title: const Text('نجح'),
-        content: Text(message),
-        actions: [
-          FilledButton(
-            child: const Text('موافق'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _getSchoolName(int schoolId) {
     try {
       final school = _schools.firstWhere((s) => s.id == schoolId);
@@ -151,41 +138,39 @@ class _TeachersPageState extends State<TeachersPage> {
     }
   }
 
-  void _showAddTeacherDialog() {
+  void _showAddEmployeeDialog() {
     showDialog(
       context: context,
-      builder: (context) => AddTeacherDialog(
+      builder: (context) => AddEmployeeDialog(
         schools: _schools,
-        onTeacherAdded: () {
+        onEmployeeAdded: () {
           _loadData();
           Navigator.of(context).pop();
-          _showSuccessDialog('تم إضافة المعلم بنجاح');
         },
       ),
     );
   }
 
-  void _showEditTeacherDialog(Teacher teacher) {
+  void _showEditEmployeeDialog(Employee employee) {
     showDialog(
       context: context,
-      builder: (context) => EditTeacherDialog(
-        teacher: teacher,
+      builder: (context) => EditEmployeeDialog(
+        employee: employee,
         schools: _schools,
-        onTeacherUpdated: () {
+        onEmployeeUpdated: () {
           _loadData();
           Navigator.of(context).pop();
-          _showSuccessDialog('تم تحديث المعلم بنجاح');
         },
       ),
     );
   }
 
-  void _showDeleteConfirmation(Teacher teacher) {
+  void _showDeleteConfirmation(Employee employee) {
     showDialog(
       context: context,
       builder: (context) => ContentDialog(
         title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت متأكد من حذف المعلم "${teacher.name}"؟'),
+        content: Text('هل أنت متأكد من حذف الموظف "${employee.name}"؟'),
         actions: [
           Button(
             child: const Text('إلغاء'),
@@ -194,16 +179,15 @@ class _TeachersPageState extends State<TeachersPage> {
           FilledButton(
             onPressed: () async {
               try {
-                await _teacherService.deleteTeacher(teacher.id!);
+                await _employeeService.deleteEmployee(employee.id!);
                 Navigator.of(context).pop();
                 _loadData();
-                _showSuccessDialog('تم حذف المعلم بنجاح');
+                // يمكن إضافة رسالة نجاح هنا
               } catch (e) {
                 Navigator.of(context).pop();
-                _showErrorDialog('خطأ في حذف المعلم: ${e.toString()}');
+                _showErrorDialog('خطأ في حذف الموظف: ${e.toString()}');
               }
             },
-            style: ButtonStyle(backgroundColor: ButtonState.all(Colors.red)),
             child: const Text('حذف'),
           ),
         ],
@@ -220,7 +204,7 @@ class _TeachersPageState extends State<TeachersPage> {
           padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Column(
             children: [
-              // شريط إدارة المعلمين
+              // شريط إدارة الموظفين
               _buildManagementBar(),
               const SizedBox(height: 16),
 
@@ -233,7 +217,7 @@ class _TeachersPageState extends State<TeachersPage> {
               const SizedBox(height: 16),
 
               // الجدول الرئيسي
-              Expanded(child: _buildTeachersTable()),
+              Expanded(child: _buildEmployeesTable()),
 
               // معلومات التلخيص
               _buildSummarySection(),
@@ -259,12 +243,12 @@ class _TeachersPageState extends State<TeachersPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'إدارة المعلمين',
+                  'إدارة الموظفين',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'عرض وإدارة جميع المعلمين في النظام مع إمكانيات البحث والتصفية المتقدمة',
+                  'عرض وإدارة جميع الموظفين في النظام مع إمكانيات البحث والتصفية المتقدمة',
                   style: TextStyle(fontSize: 14, color: Colors.grey[120]),
                 ),
               ],
@@ -279,7 +263,7 @@ class _TeachersPageState extends State<TeachersPage> {
             child: Column(
               children: [
                 const Text(
-                  'إجمالي المعلمين',
+                  'إجمالي الرواتب',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -287,7 +271,7 @@ class _TeachersPageState extends State<TeachersPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$_totalTeachers معلم',
+                  '${NumberFormat('#,###').format(_totalSalaries)} د.ع',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -357,8 +341,40 @@ class _TeachersPageState extends State<TeachersPage> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                // حقل البحث: اسم المعلم
+                const SizedBox(width: 8),
+                // قائمة المهن
+                SizedBox(
+                  width: 180,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('المهنة'),
+                      const SizedBox(height: 8),
+                      ComboBox<String?>(
+                        placeholder: const Text('جميع المهن'),
+                        value: _selectedJobType,
+                        items: [
+                          const ComboBoxItem<String?>(
+                            value: null,
+                            child: Text('جميع المهن'),
+                          ),
+                          ..._jobTypes.map(
+                            (jobType) => ComboBoxItem<String?>(
+                              value: jobType,
+                              child: Text(jobType),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() => _selectedJobType = value);
+                          _applyFilters();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // حقل البحث
                 SizedBox(
                   width: 250,
                   child: Column(
@@ -368,15 +384,13 @@ class _TeachersPageState extends State<TeachersPage> {
                       const SizedBox(height: 8),
                       TextBox(
                         controller: _searchController,
-                        placeholder: 'اسم المعلم',
+                        placeholder: 'اسم الموظف أو المدرسة',
                         suffix: IconButton(
                           icon: const Icon(FluentIcons.search),
                           onPressed: _applyFilters,
                         ),
                         onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
+                          setState(() => _searchQuery = value);
                           _applyFilters();
                         },
                       ),
@@ -418,14 +432,28 @@ class _TeachersPageState extends State<TeachersPage> {
           ),
         ),
         const SizedBox(width: 12),
+        Button(
+          onPressed: () {
+            // TODO: تصدير التقرير
+          },
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.document, size: 16),
+              SizedBox(width: 8),
+              Text('تقرير الموظفين'),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
         FilledButton(
-          onPressed: _showAddTeacherDialog,
+          onPressed: _showAddEmployeeDialog,
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(FluentIcons.add, size: 16),
               SizedBox(width: 8),
-              Text('إضافة معلم'),
+              Text('إضافة موظف'),
             ],
           ),
         ),
@@ -433,12 +461,12 @@ class _TeachersPageState extends State<TeachersPage> {
     );
   }
 
-  Widget _buildTeachersTable() {
+  Widget _buildEmployeesTable() {
     if (_isLoading) {
       return const Center(child: ProgressRing());
     }
 
-    if (_filteredTeachers.isEmpty) {
+    if (_filteredEmployees.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -446,7 +474,7 @@ class _TeachersPageState extends State<TeachersPage> {
             Icon(FluentIcons.people, size: 64, color: Colors.grey[120]),
             const SizedBox(height: 16),
             Text(
-              'لا توجد معلمين',
+              'لا توجد موظفين',
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[120],
@@ -455,7 +483,7 @@ class _TeachersPageState extends State<TeachersPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'لم يتم العثور على معلمين يطابقون معايير البحث المحددة',
+              'لم يتم العثور على موظفين يطابقون معايير البحث المحددة',
               style: TextStyle(fontSize: 14, color: Colors.grey[100]),
             ),
           ],
@@ -486,20 +514,20 @@ class _TeachersPageState extends State<TeachersPage> {
                 Expanded(
                   flex: 1,
                   child: Text(
-                    'تسلسل',
+                    '#',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 3,
                   child: Text(
-                    'الاسم',
+                    'اسم الموظف',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -508,58 +536,48 @@ class _TeachersPageState extends State<TeachersPage> {
                   child: Text(
                     'المدرسة',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'عدد الحصص',
+                    'المهنة',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'الراتب الشهري',
+                    'الراتب',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'رقم الهاتف',
+                    'الهاتف',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'ملاحظات',
-                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
                     ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'إجراءات',
+                    'الإجراءات',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -570,58 +588,41 @@ class _TeachersPageState extends State<TeachersPage> {
           // صفوف البيانات
           Expanded(
             child: ListView.builder(
-              itemCount: _filteredTeachers.length,
+              itemCount: _filteredEmployees.length,
               itemBuilder: (context, index) {
-                final teacher = _filteredTeachers[index];
+                final employee = _filteredEmployees[index];
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     border: Border(bottom: BorderSide(color: Colors.grey[50])),
+                    color: index % 2 == 0 ? Colors.grey[10] : null,
                   ),
                   child: Row(
                     children: [
-                      // تسلسل
                       Expanded(flex: 1, child: Text('${index + 1}')),
-                      // الاسم
                       Expanded(
                         flex: 3,
                         child: Text(
-                          teacher.name,
+                          employee.name,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ),
-                      // المدرسة
                       Expanded(
                         flex: 3,
-                        child: Text(_getSchoolName(teacher.schoolId)),
+                        child: Text(_getSchoolName(employee.schoolId)),
                       ),
-                      // عدد الحصص
-                      Expanded(flex: 2, child: Text('${teacher.classHours}')),
-                      // الراتب الشهري
+                      Expanded(flex: 2, child: Text(employee.jobType)),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${NumberFormat('#,###').format(teacher.monthlySalary)} د.ع',
+                          '${NumberFormat('#,###').format(employee.monthlySalary)} د.ع',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
                             color: Colors.green.dark,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      // رقم الهاتف
-                      Expanded(flex: 2, child: Text(teacher.phone ?? '-')),
-                      // ملاحظات
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          teacher.notes ?? '-',
-                          style: TextStyle(
-                            color: Colors.grey[120],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      // إجراءات
+                      Expanded(flex: 2, child: Text(employee.phone ?? '-')),
                       Expanded(
                         flex: 2,
                         child: Row(
@@ -630,17 +631,19 @@ class _TeachersPageState extends State<TeachersPage> {
                             IconButton(
                               icon: Icon(
                                 FluentIcons.edit,
-                                color: Colors.blue.dark,
+                                color: Colors.blue.normal,
                               ),
-                              onPressed: () => _showEditTeacherDialog(teacher),
+                              onPressed: () =>
+                                  _showEditEmployeeDialog(employee),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 4),
                             IconButton(
                               icon: Icon(
                                 FluentIcons.delete,
-                                color: Colors.red.dark,
+                                color: Colors.red.normal,
                               ),
-                              onPressed: () => _showDeleteConfirmation(teacher),
+                              onPressed: () =>
+                                  _showDeleteConfirmation(employee),
                             ),
                           ],
                         ),
@@ -665,95 +668,159 @@ class _TeachersPageState extends State<TeachersPage> {
         border: Border.all(color: Colors.grey[100]),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'ملخص المعلمين المعروضين',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'عدد المعلمين: ${_filteredTeachers.length} معلم',
-                style: TextStyle(fontSize: 14, color: Colors.grey[120]),
-              ),
-            ],
+          Expanded(
+            child: Row(
+              children: [
+                // إجمالي الموظفين
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.light, Colors.blue.normal],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          FluentIcons.people,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '$_totalEmployees',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Text(
+                          'إجمالي الموظفين',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // المعروض حالياً
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.green.light, Colors.green.normal],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          FluentIcons.view,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '$_totalCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Text(
+                          'المعروض حالياً',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // أنواع المهن
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.orange.light, Colors.orange.normal],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          FluentIcons.settings,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${_jobTypes.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Text(
+                          'أنواع المهن',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.orange.light, Colors.orange.dark],
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'إجمالي الحصص',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$_totalClassHours حصة',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+          const SizedBox(width: 20),
+          // إجمالي الرواتب
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.purple.light, Colors.purple.normal],
               ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.green.light, Colors.green.dark],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                const Icon(FluentIcons.money, color: Colors.white, size: 28),
+                const SizedBox(height: 8),
+                const Text(
+                  'إجمالي الرواتب الشهرية',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
                   ),
-                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'إجمالي الرواتب',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${NumberFormat('#,###').format(_totalSalaries)} د.ع',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  '${NumberFormat('#,###').format(_totalSalaries)} د.ع',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }

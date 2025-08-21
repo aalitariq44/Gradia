@@ -6,11 +6,11 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../models/student_model.dart';
-import '../models/school_model.dart';
-import '../services/student_service.dart';
-import '../services/school_service.dart';
-import '../printing/printing_system.dart';
+import '../../models/student_model.dart';
+import '../../models/school_model.dart';
+import '../../services/student_service.dart';
+import '../../services/school_service.dart';
+import '../../printing/printing_system.dart';
 import './student_details_page.dart';
 import './edit_student_dialog.dart';
 

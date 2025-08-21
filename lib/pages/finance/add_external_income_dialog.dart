@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../services/external_income_service.dart';
-import '../models/external_income_model.dart';
-import '../models/school_model.dart';
+import '../../services/external_income_service.dart';
+import '../../models/external_income_model.dart';
+import '../../models/school_model.dart';
 
 class AddExternalIncomeDialog extends StatefulWidget {
   final List<School> schools;

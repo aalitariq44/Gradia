@@ -1,8 +1,8 @@
 
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:gradia/models/school_model.dart';
-import 'package:gradia/services/school_service.dart';
-import 'package:gradia/utils/app_text_styles.dart';
+import '../../models/school_model.dart';
+import '../../services/school_service.dart';
+import '../../utils/app_text_styles.dart';
 
 class EditSchoolDialog extends StatefulWidget {
   final School school;

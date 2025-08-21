@@ -1,5 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import '../utils/app_text_styles.dart';
+import '../../utils/app_text_styles.dart';
 
 /// صفحة توضيحية لعرض جميع أنماط الخطوط المتاحة
 class FontDemoPage extends StatelessWidget {

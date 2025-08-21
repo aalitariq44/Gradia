@@ -1,45 +1,38 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../models/installment_model.dart';
-import '../models/student_model.dart';
-import '../models/school_model.dart';
-import '../services/installment_service.dart';
-import '../services/student_service.dart';
-import '../services/school_service.dart';
+import '../../models/teacher_model.dart';
+import '../../models/school_model.dart';
+import '../../services/teacher_service.dart';
+import '../../services/school_service.dart';
+import 'add_teacher_dialog.dart';
+import 'edit_teacher_dialog.dart';
 
-class TuitionsPage extends StatefulWidget {
-  const TuitionsPage({Key? key}) : super(key: key);
+class TeachersPage extends StatefulWidget {
+  const TeachersPage({super.key});
 
   @override
-  State<TuitionsPage> createState() => _TuitionsPageState();
+  State<TeachersPage> createState() => _TeachersPageState();
 }
 
-class _TuitionsPageState extends State<TuitionsPage> {
-  final InstallmentService _installmentService = InstallmentService();
-  final StudentService _studentService = StudentService();
+class _TeachersPageState extends State<TeachersPage> {
+  final TeacherService _teacherService = TeacherService();
   final SchoolService _schoolService = SchoolService();
 
-  List<Installment> _installments = [];
-  List<Installment> _filteredInstallments = [];
-  List<Student> _students = [];
+  List<Teacher> _teachers = [];
+  List<Teacher> _filteredTeachers = [];
   List<School> _schools = [];
   bool _isLoading = false;
 
   // متحكمات التصفية
   int? _selectedSchoolId;
-  int? _selectedStudentId;
-  DateTime? _startDate;
-  DateTime? _endDate;
-  final TextEditingController _startDateController = TextEditingController();
-  final TextEditingController _endDateController = TextEditingController();
-  // Controller and query for search field
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   // الإحصائيات
-  double _totalAmount = 0.0;
-  int _totalCount = 0;
+  int _totalTeachers = 0;
+  int _totalClassHours = 0;
+  double _totalSalaries = 0.0;
 
   @override
   void initState() {
@@ -47,11 +40,18 @@ class _TuitionsPageState extends State<TuitionsPage> {
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      await Future.wait([_loadInstallments(), _loadStudents(), _loadSchools()]);
+      await Future.wait([_loadTeachers(), _loadSchools()]);
       _applyFilters();
+      await _loadStatistics();
     } catch (e) {
       _showErrorDialog('خطأ في تحميل البيانات: $e');
     } finally {
@@ -59,89 +59,51 @@ class _TuitionsPageState extends State<TuitionsPage> {
     }
   }
 
-  Future<void> _loadInstallments() async {
-    _installments = await _installmentService.getAllInstallments();
-  }
-
-  Future<void> _loadStudents() async {
-    _students = await _studentService.getAllStudents();
+  Future<void> _loadTeachers() async {
+    _teachers = await _teacherService.getAllTeachers();
   }
 
   Future<void> _loadSchools() async {
     _schools = await _schoolService.getAllSchools();
   }
 
+  Future<void> _loadStatistics() async {
+    final totalTeachers = await _teacherService.getTeachersCount();
+    final totalClassHours = await _teacherService.getTotalClassHours();
+    final totalSalaries = await _teacherService.getTotalSalaries();
+
+    setState(() {
+      _totalTeachers = totalTeachers;
+      _totalClassHours = totalClassHours;
+      _totalSalaries = totalSalaries;
+    });
+  }
+
   void _applyFilters() {
-    List<Installment> filtered = List.from(_installments);
+    List<Teacher> filtered = List.from(_teachers);
 
     // تصفية حسب المدرسة
     if (_selectedSchoolId != null) {
-      final studentIds = _students
-          .where((s) => s.schoolId == _selectedSchoolId)
-          .map((s) => s.id!)
-          .toList();
       filtered = filtered
-          .where((i) => studentIds.contains(i.studentId))
+          .where((teacher) => teacher.schoolId == _selectedSchoolId)
           .toList();
     }
 
-    // تصفية حسب الطالب
-    if (_selectedStudentId != null) {
-      filtered = filtered
-          .where((i) => i.studentId == _selectedStudentId)
-          .toList();
-    }
-
-    // تصفية حسب نطاق التاريخ
-    if (_startDate != null) {
-      filtered = filtered
-          .where(
-            (i) => i.paymentDate.isAfter(
-              _startDate!.subtract(const Duration(days: 1)),
-            ),
-          )
-          .toList();
-    }
-    if (_endDate != null) {
-      filtered = filtered
-          .where(
-            (i) =>
-                i.paymentDate.isBefore(_endDate!.add(const Duration(days: 1))),
-          )
-          .toList();
-    }
-    // تصفية حسب البحث (اسم الطالب أو رقم الوصل)
+    // تصفية حسب البحث (اسم المعلم)
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((i) {
-        final studentName = _getStudentName(i.studentId);
-        final idString = i.id?.toString() ?? '';
-        return studentName.contains(_searchQuery) ||
-            idString.contains(_searchQuery);
+      filtered = filtered.where((teacher) {
+        return teacher.name.toLowerCase().contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
     setState(() {
-      _filteredInstallments = filtered;
-      _calculateTotals();
+      _filteredTeachers = filtered;
     });
-  }
-
-  void _calculateTotals() {
-    _totalAmount = _filteredInstallments.fold(
-      0.0,
-      (sum, item) => sum + item.amount,
-    );
-    _totalCount = _filteredInstallments.length;
   }
 
   void _clearFilters() {
     setState(() {
       _selectedSchoolId = null;
-      _selectedStudentId = null;
-      _startDate = null;
-      _endDate = null;
-      _startDateController.clear();
-      _endDateController.clear();
       _searchController.clear();
       _searchQuery = '';
     });
@@ -164,98 +126,89 @@ class _TuitionsPageState extends State<TuitionsPage> {
     );
   }
 
-  Future<void> _selectDate(bool isStartDate) async {
-    final currentDate = isStartDate ? _startDate : _endDate;
-    final TextEditingController dateController = TextEditingController(
-      text: currentDate != null
-          ? DateFormat('yyyy-MM-dd').format(currentDate)
-          : '',
-    );
-
+  void _showSuccessDialog(String message) {
     showDialog(
       context: context,
       builder: (context) => ContentDialog(
-        title: Text(isStartDate ? 'اختر تاريخ البداية' : 'اختر تاريخ النهاية'),
-        content: SizedBox(
-          width: 300,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormBox(
-                controller: dateController,
-                placeholder: 'YYYY-MM-DD',
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  try {
-                    DateTime.parse(value);
-                    return null;
-                  } catch (e) {
-                    return 'تنسيق التاريخ غير صحيح';
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'أمثلة: 2024-01-15, 2024-12-31',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
+        title: const Text('نجح'),
+        content: Text(message),
         actions: [
-          Button(
-            child: const Text('إلغاء'),
-            onPressed: () => Navigator.pop(context),
-          ),
           FilledButton(
             child: const Text('موافق'),
-            onPressed: () {
-              try {
-                if (dateController.text.isNotEmpty) {
-                  final picked = DateTime.parse(dateController.text);
-                  setState(() {
-                    if (isStartDate) {
-                      _startDate = picked;
-                      _startDateController.text = DateFormat(
-                        'yyyy-MM-dd',
-                      ).format(picked);
-                    } else {
-                      _endDate = picked;
-                      _endDateController.text = DateFormat(
-                        'yyyy-MM-dd',
-                      ).format(picked);
-                    }
-                  });
-                  _applyFilters();
-                }
-                Navigator.pop(context);
-              } catch (e) {
-                // إظهار رسالة خطأ
-              }
-            },
+            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
     );
   }
 
-  String _getStudentName(int studentId) {
+  String _getSchoolName(int schoolId) {
     try {
-      final student = _students.firstWhere((s) => s.id == studentId);
-      return student.name;
+      final school = _schools.firstWhere((s) => s.id == schoolId);
+      return school.nameAr;
     } catch (e) {
       return 'غير محدد';
     }
   }
 
-  String _getSchoolName(int studentId) {
-    try {
-      final student = _students.firstWhere((s) => s.id == studentId);
-      final school = _schools.firstWhere((s) => s.id == student.schoolId);
-      return school.nameAr;
-    } catch (e) {
-      return 'غير محدد';
-    }
+  void _showAddTeacherDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AddTeacherDialog(
+        schools: _schools,
+        onTeacherAdded: () {
+          _loadData();
+          Navigator.of(context).pop();
+          _showSuccessDialog('تم إضافة المعلم بنجاح');
+        },
+      ),
+    );
+  }
+
+  void _showEditTeacherDialog(Teacher teacher) {
+    showDialog(
+      context: context,
+      builder: (context) => EditTeacherDialog(
+        teacher: teacher,
+        schools: _schools,
+        onTeacherUpdated: () {
+          _loadData();
+          Navigator.of(context).pop();
+          _showSuccessDialog('تم تحديث المعلم بنجاح');
+        },
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(Teacher teacher) {
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد من حذف المعلم "${teacher.name}"؟'),
+        actions: [
+          Button(
+            child: const Text('إلغاء'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          FilledButton(
+            onPressed: () async {
+              try {
+                await _teacherService.deleteTeacher(teacher.id!);
+                Navigator.of(context).pop();
+                _loadData();
+                _showSuccessDialog('تم حذف المعلم بنجاح');
+              } catch (e) {
+                Navigator.of(context).pop();
+                _showErrorDialog('خطأ في حذف المعلم: ${e.toString()}');
+              }
+            },
+            style: ButtonStyle(backgroundColor: ButtonState.all(Colors.red)),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -267,9 +220,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
           padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Column(
             children: [
-              // الرأس والعنوان
-
-              // شريط إدارة الأقساط
+              // شريط إدارة المعلمين
               _buildManagementBar(),
               const SizedBox(height: 16),
 
@@ -282,7 +233,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
               const SizedBox(height: 16),
 
               // الجدول الرئيسي
-              Expanded(child: _buildInstallmentsTable()),
+              Expanded(child: _buildTeachersTable()),
 
               // معلومات التلخيص
               _buildSummarySection(),
@@ -308,12 +259,12 @@ class _TuitionsPageState extends State<TuitionsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'إدارة الأقساط',
+                  'إدارة المعلمين',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'عرض وإدارة جميع الأقساط المدفوعة في النظام مع إمكانيات البحث والتصفية المتقدمة',
+                  'عرض وإدارة جميع المعلمين في النظام مع إمكانيات البحث والتصفية المتقدمة',
                   style: TextStyle(fontSize: 14, color: Colors.grey[120]),
                 ),
               ],
@@ -328,7 +279,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
             child: Column(
               children: [
                 const Text(
-                  'إجمالي الأقساط',
+                  'إجمالي المعلمين',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -336,7 +287,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
+                  '$_totalTeachers معلم',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -399,102 +350,17 @@ class _TuitionsPageState extends State<TuitionsPage> {
                           ),
                         ],
                         onChanged: (value) {
-                          setState(() {
-                            _selectedSchoolId = value;
-                            _selectedStudentId = null;
-                          });
+                          setState(() => _selectedSchoolId = value);
                           _applyFilters();
                         },
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                // قائمة الطلاب
+                const SizedBox(width: 16),
+                // حقل البحث: اسم المعلم
                 SizedBox(
-                  width: 200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('الطالب'),
-                      const SizedBox(height: 8),
-                      ComboBox<int?>(
-                        placeholder: const Text('جميع الطلاب'),
-                        value: _selectedStudentId,
-                        items: [
-                          const ComboBoxItem<int?>(
-                            value: null,
-                            child: Text('جميع الطلاب'),
-                          ),
-                          ..._students
-                              .where(
-                                (student) =>
-                                    _selectedSchoolId == null ||
-                                    student.schoolId == _selectedSchoolId,
-                              )
-                              .map(
-                                (student) => ComboBoxItem<int?>(
-                                  value: student.id,
-                                  child: Text(student.name),
-                                ),
-                              ),
-                        ],
-                        onChanged: (value) {
-                          setState(() => _selectedStudentId = value);
-                          _applyFilters();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // تاريخ البداية
-                SizedBox(
-                  width: 150,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('من تاريخ'),
-                      const SizedBox(height: 8),
-                      TextFormBox(
-                        controller: _startDateController,
-                        placeholder: 'اختر تاريخ البداية',
-                        readOnly: true,
-                        onTap: () => _selectDate(true),
-                        suffix: IconButton(
-                          icon: const Icon(FluentIcons.calendar),
-                          onPressed: () => _selectDate(true),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // تاريخ النهاية
-                SizedBox(
-                  width: 150,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('إلى تاريخ'),
-                      const SizedBox(height: 8),
-                      TextFormBox(
-                        controller: _endDateController,
-                        placeholder: 'اختر تاريخ النهاية',
-                        readOnly: true,
-                        onTap: () => _selectDate(false),
-                        suffix: IconButton(
-                          icon: const Icon(FluentIcons.calendar),
-                          onPressed: () => _selectDate(false),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // حقل البحث: اسم الطالب أو رقم الوصل
-                SizedBox(
-                  width: 200,
+                  width: 250,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -502,7 +368,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                       const SizedBox(height: 8),
                       TextBox(
                         controller: _searchController,
-                        placeholder: 'اسم الطالب أو رقم الوصل',
+                        placeholder: 'اسم المعلم',
                         suffix: IconButton(
                           icon: const Icon(FluentIcons.search),
                           onPressed: _applyFilters,
@@ -552,16 +418,14 @@ class _TuitionsPageState extends State<TuitionsPage> {
           ),
         ),
         const SizedBox(width: 12),
-        Button(
-          onPressed: () {
-            // TODO: تصدير التقرير
-          },
+        FilledButton(
+          onPressed: _showAddTeacherDialog,
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(FluentIcons.document, size: 16),
+              Icon(FluentIcons.add, size: 16),
               SizedBox(width: 8),
-              Text('تقرير مالي'),
+              Text('إضافة معلم'),
             ],
           ),
         ),
@@ -569,20 +433,20 @@ class _TuitionsPageState extends State<TuitionsPage> {
     );
   }
 
-  Widget _buildInstallmentsTable() {
+  Widget _buildTeachersTable() {
     if (_isLoading) {
       return const Center(child: ProgressRing());
     }
 
-    if (_filteredInstallments.isEmpty) {
+    if (_filteredTeachers.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(FluentIcons.money, size: 64, color: Colors.grey[120]),
+            Icon(FluentIcons.people, size: 64, color: Colors.grey[120]),
             const SizedBox(height: 16),
             Text(
-              'لا توجد أقساط مدفوعة',
+              'لا توجد معلمين',
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[120],
@@ -591,7 +455,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'لم يتم العثور على أقساط تطابق معايير البحث المحددة',
+              'لم يتم العثور على معلمين يطابقون معايير البحث المحددة',
               style: TextStyle(fontSize: 14, color: Colors.grey[100]),
             ),
           ],
@@ -611,7 +475,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.purple.light,
+              color: Colors.blue.light,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -619,8 +483,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
             ),
             child: const Row(
               children: [
-                // new sequence header
-                const Expanded(
+                Expanded(
                   flex: 1,
                   child: Text(
                     'تسلسل',
@@ -631,19 +494,9 @@ class _TuitionsPageState extends State<TuitionsPage> {
                   ),
                 ),
                 Expanded(
-                  flex: 2,
-                  child: Text(
-                    'رقم الوصل',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Expanded(
                   flex: 3,
                   child: Text(
-                    'الطالب',
+                    'الاسم',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -663,7 +516,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'المبلغ',
+                    'عدد الحصص',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -673,7 +526,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'تاريخ الدفع',
+                    'الراتب الشهري',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -683,7 +536,7 @@ class _TuitionsPageState extends State<TuitionsPage> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'وقت الدفع',
+                    'رقم الهاتف',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -700,6 +553,16 @@ class _TuitionsPageState extends State<TuitionsPage> {
                     ),
                   ),
                 ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'إجراءات',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -707,9 +570,9 @@ class _TuitionsPageState extends State<TuitionsPage> {
           // صفوف البيانات
           Expanded(
             child: ListView.builder(
-              itemCount: _filteredInstallments.length,
+              itemCount: _filteredTeachers.length,
               itemBuilder: (context, index) {
-                final installment = _filteredInstallments[index];
+                final teacher = _filteredTeachers[index];
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -719,48 +582,67 @@ class _TuitionsPageState extends State<TuitionsPage> {
                     children: [
                       // تسلسل
                       Expanded(flex: 1, child: Text('${index + 1}')),
-                      Expanded(
-                        flex: 2,
-                        child: Text('${installment.id ?? '-'}'),
-                      ),
+                      // الاسم
                       Expanded(
                         flex: 3,
                         child: Text(
-                          _getStudentName(installment.studentId),
+                          teacher.name,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ),
+                      // المدرسة
                       Expanded(
                         flex: 3,
-                        child: Text(_getSchoolName(installment.studentId)),
+                        child: Text(_getSchoolName(teacher.schoolId)),
                       ),
+                      // عدد الحصص
+                      Expanded(flex: 2, child: Text('${teacher.classHours}')),
+                      // الراتب الشهري
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${NumberFormat('#,###').format(installment.amount)} د.ع',
+                          '${NumberFormat('#,###').format(teacher.monthlySalary)} د.ع',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.green.dark,
                           ),
                         ),
                       ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          DateFormat(
-                            'yyyy-MM-dd',
-                          ).format(installment.paymentDate),
-                        ),
-                      ),
-                      Expanded(flex: 2, child: Text(installment.paymentTime)),
+                      // رقم الهاتف
+                      Expanded(flex: 2, child: Text(teacher.phone ?? '-')),
+                      // ملاحظات
                       Expanded(
                         flex: 3,
                         child: Text(
-                          installment.notes ?? '-',
+                          teacher.notes ?? '-',
                           style: TextStyle(
                             color: Colors.grey[120],
                             fontSize: 13,
                           ),
+                        ),
+                      ),
+                      // إجراءات
+                      Expanded(
+                        flex: 2,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                FluentIcons.edit,
+                                color: Colors.blue.dark,
+                              ),
+                              onPressed: () => _showEditTeacherDialog(teacher),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: Icon(
+                                FluentIcons.delete,
+                                color: Colors.red.dark,
+                              ),
+                              onPressed: () => _showDeleteConfirmation(teacher),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -789,55 +671,89 @@ class _TuitionsPageState extends State<TuitionsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'ملخص الأقساط المعروضة',
+                'ملخص المعلمين المعروضين',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                'عدد الأقساط: $_totalCount قسط',
+                'عدد المعلمين: ${_filteredTeachers.length} معلم',
                 style: TextStyle(fontSize: 14, color: Colors.grey[120]),
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.green.light, Colors.green.dark],
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.orange.light, Colors.orange.dark],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'إجمالي الحصص',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$_totalClassHours حصة',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  'إجمالي المبلغ',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${NumberFormat('#,###').format(_totalAmount)} د.ع',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.light, Colors.green.dark],
                   ),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-            ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'إجمالي الرواتب',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${NumberFormat('#,###').format(_totalSalaries)} د.ع',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _startDateController.dispose();
-    _endDateController.dispose();
-    _searchController.dispose();
-    super.dispose();
   }
 }

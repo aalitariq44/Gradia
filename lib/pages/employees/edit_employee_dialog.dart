@@ -1,64 +1,87 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/teacher_model.dart';
-import '../models/school_model.dart';
-import '../services/teacher_service.dart';
+import '../../models/employee_model.dart';
+import '../../models/school_model.dart';
+import '../../services/employee_service.dart';
 
-class EditTeacherDialog extends StatefulWidget {
-  final Teacher teacher;
+class EditEmployeeDialog extends StatefulWidget {
+  final Employee employee;
   final List<School> schools;
-  final VoidCallback onTeacherUpdated;
+  final VoidCallback onEmployeeUpdated;
 
-  const EditTeacherDialog({
+  const EditEmployeeDialog({
     super.key,
-    required this.teacher,
+    required this.employee,
     required this.schools,
-    required this.onTeacherUpdated,
+    required this.onEmployeeUpdated,
   });
 
   @override
-  State<EditTeacherDialog> createState() => _EditTeacherDialogState();
+  State<EditEmployeeDialog> createState() => _EditEmployeeDialogState();
 }
 
-class _EditTeacherDialogState extends State<EditTeacherDialog> {
+class _EditEmployeeDialogState extends State<EditEmployeeDialog> {
   final _formKey = GlobalKey<FormState>();
-  final TeacherService _teacherService = TeacherService();
+  final EmployeeService _employeeService = EmployeeService();
 
   late final TextEditingController _nameController;
-  late final TextEditingController _classHoursController;
+  late final TextEditingController _jobTypeController;
   late final TextEditingController _salaryController;
   late final TextEditingController _phoneController;
   late final TextEditingController _notesController;
 
   int? _selectedSchoolId;
+  String? _selectedJobType;
   bool _isLoading = false;
+
+  // قائمة المهن الشائعة
+  final List<String> _commonJobTypes = [
+    'محاسب',
+    'كاتب',
+    'عامل نظافة',
+    'حارس أمن',
+    'سائق',
+    'مشرف',
+    'مساعد إداري',
+    'فني صيانة',
+    'عامل مختبر',
+    'أمين مكتبة',
+    'مرشد طلابي',
+    'ممرض',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.teacher.name);
-    _classHoursController = TextEditingController(
-      text: widget.teacher.classHours.toString(),
-    );
+    _nameController = TextEditingController(text: widget.employee.name);
     _salaryController = TextEditingController(
-      text: widget.teacher.monthlySalary.toString(),
+      text: widget.employee.monthlySalary.toString(),
     );
-    _phoneController = TextEditingController(text: widget.teacher.phone ?? '');
-    _notesController = TextEditingController(text: widget.teacher.notes ?? '');
-    _selectedSchoolId = widget.teacher.schoolId;
+    _phoneController = TextEditingController(text: widget.employee.phone ?? '');
+    _notesController = TextEditingController(text: widget.employee.notes ?? '');
+    _selectedSchoolId = widget.employee.schoolId;
+
+    // تحديد ما إذا كانت المهنة موجودة في القائمة الشائعة أم لا
+    if (_commonJobTypes.contains(widget.employee.jobType)) {
+      _selectedJobType = widget.employee.jobType;
+      _jobTypeController = TextEditingController();
+    } else {
+      _selectedJobType = null;
+      _jobTypeController = TextEditingController(text: widget.employee.jobType);
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _classHoursController.dispose();
+    _jobTypeController.dispose();
     _salaryController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
-  Future<void> _updateTeacher() async {
+  Future<void> _updateEmployee() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedSchoolId == null) {
@@ -66,13 +89,19 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
       return;
     }
 
+    final jobType = _selectedJobType ?? _jobTypeController.text.trim();
+    if (jobType.isEmpty) {
+      _showErrorSnackBar('يرجى اختيار أو إدخال المهنة');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      final updatedTeacher = widget.teacher.copyWith(
+      final updatedEmployee = widget.employee.copyWith(
         name: _nameController.text.trim(),
         schoolId: _selectedSchoolId!,
-        classHours: int.parse(_classHoursController.text),
+        jobType: jobType,
         monthlySalary: double.parse(_salaryController.text),
         phone: _phoneController.text.trim().isEmpty
             ? null
@@ -83,11 +112,11 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
         updatedAt: DateTime.now(),
       );
 
-      await _teacherService.updateTeacher(updatedTeacher);
-      widget.onTeacherUpdated();
-      _showSuccessSnackBar('تم تحديث المعلم بنجاح');
+      await _employeeService.updateEmployee(updatedEmployee);
+      widget.onEmployeeUpdated();
+      _showSuccessSnackBar('تم تحديث الموظف بنجاح');
     } catch (e) {
-      _showErrorSnackBar('خطأ في تحديث المعلم: ${e.toString()}');
+      _showErrorSnackBar('خطأ في تحديث الموظف: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -128,7 +157,7 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                   ),
                 ),
                 child: const Text(
-                  'تعديل بيانات المعلم',
+                  'تعديل بيانات الموظف',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -156,7 +185,7 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                       controller: _nameController,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: 'أدخل اسم المعلم',
+                        hintText: 'أدخل اسم الموظف',
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
@@ -221,41 +250,75 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
 
               const SizedBox(height: 16),
 
-              // عدد الحصص
+              // المهنة
               Row(
                 children: [
                   const SizedBox(
                     width: 100,
                     child: Text(
-                      'عدد الحصص *',
+                      'المهنة *',
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: TextFormField(
-                      controller: _classHoursController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: '0',
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                    child: Column(
+                      children: [
+                        // قائمة المهن الشائعة
+                        DropdownButtonFormField<String>(
+                          value: _selectedJobType,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'اختر من المهن الشائعة',
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          items: [
+                            const DropdownMenuItem<String>(
+                              value: null,
+                              child: Text(
+                                '-- اختر من القائمة أو أدخل مهنة جديدة --',
+                              ),
+                            ),
+                            ..._commonJobTypes.map(
+                              (jobType) => DropdownMenuItem<String>(
+                                value: jobType,
+                                child: Text(jobType),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedJobType = value;
+                              if (value != null) {
+                                _jobTypeController.clear();
+                              }
+                            });
+                          },
                         ),
-                        suffixIcon: Icon(Icons.schedule),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'عدد الحصص مطلوب';
-                        }
-                        final hours = int.tryParse(value);
-                        if (hours == null || hours < 0) {
-                          return 'يرجى إدخال رقم صحيح';
-                        }
-                        return null;
-                      },
+                        const SizedBox(height: 8),
+                        const Text('أو', style: TextStyle(color: Colors.grey)),
+                        const SizedBox(height: 8),
+                        // حقل إدخال مهنة جديدة
+                        TextFormField(
+                          controller: _jobTypeController,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'أدخل مهنة جديدة',
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            if (value.isNotEmpty) {
+                              setState(() => _selectedJobType = null);
+                            }
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -389,7 +452,7 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _updateTeacher,
+                    onPressed: _isLoading ? null : _updateEmployee,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade800,
                       foregroundColor: Colors.white,
@@ -409,7 +472,7 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                               ),
                             ),
                           )
-                        : const Text('تحديث المعلم'),
+                        : const Text('تحديث الموظف'),
                   ),
                 ],
               ),

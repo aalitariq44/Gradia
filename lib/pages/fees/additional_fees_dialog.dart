@@ -1,9 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../models/student_model.dart';
-import '../models/additional_fee_model.dart';
-import '../services/additional_fee_service.dart';
+import '../../models/student_model.dart';
+import '../../models/additional_fee_model.dart';
+import '../../services/additional_fee_service.dart';
 import 'add_additional_fee_dialog.dart';
 import 'print_additional_fees_dialog.dart';
 

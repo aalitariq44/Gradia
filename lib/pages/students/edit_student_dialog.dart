@@ -1,8 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/services.dart';
-import '../models/student_model.dart';
-import '../models/school_model.dart';
-import '../services/student_service.dart';
+import '../../models/student_model.dart';
+import '../../models/school_model.dart';
+import '../../services/student_service.dart';
 
 class EditStudentDialog extends StatefulWidget {
   final Student student;

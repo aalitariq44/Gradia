@@ -1,53 +1,45 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../models/additional_fee_model.dart';
-import '../models/student_model.dart';
-import '../models/school_model.dart';
-import '../services/additional_fee_service.dart';
-import '../services/student_service.dart';
-import '../services/school_service.dart';
+import '../../models/installment_model.dart';
+import '../../models/student_model.dart';
+import '../../models/school_model.dart';
+import '../../services/installment_service.dart';
+import '../../services/student_service.dart';
+import '../../services/school_service.dart';
 
-class AdditionalFeesPage extends StatefulWidget {
-  const AdditionalFeesPage({Key? key}) : super(key: key);
+class TuitionsPage extends StatefulWidget {
+  const TuitionsPage({Key? key}) : super(key: key);
 
   @override
-  State<AdditionalFeesPage> createState() => _AdditionalFeesPageState();
+  State<TuitionsPage> createState() => _TuitionsPageState();
 }
 
-class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
-  final AdditionalFeeService _additionalFeeService = AdditionalFeeService();
+class _TuitionsPageState extends State<TuitionsPage> {
+  final InstallmentService _installmentService = InstallmentService();
   final StudentService _studentService = StudentService();
   final SchoolService _schoolService = SchoolService();
 
-  List<AdditionalFee> _additionalFees = [];
-  List<AdditionalFee> _filteredFees = [];
+  List<Installment> _installments = [];
+  List<Installment> _filteredInstallments = [];
   List<Student> _students = [];
   List<School> _schools = [];
-  List<String> _feeTypes = [];
   bool _isLoading = false;
 
   // متحكمات التصفية
   int? _selectedSchoolId;
   int? _selectedStudentId;
-  String? _selectedFeeType;
-  String? _selectedPaymentStatus;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
+  // Controller and query for search field
   final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   // الإحصائيات
   double _totalAmount = 0.0;
   int _totalCount = 0;
-
-  // أنواع الرسوم المعرفة مسبقاً
-  final List<String> _predefinedFeeTypes = [
-    'التسجيل',
-    'كتب',
-    'زي مدرسي',
-    'نشاطات',
-    'مختبر',
-    'مكتبة',
-    'نقل',
-  ];
 
   @override
   void initState() {
@@ -58,12 +50,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      await Future.wait([
-        _loadAdditionalFees(),
-        _loadStudents(),
-        _loadSchools(),
-        _loadFeeTypes(),
-      ]);
+      await Future.wait([_loadInstallments(), _loadStudents(), _loadSchools()]);
       _applyFilters();
     } catch (e) {
       _showErrorDialog('خطأ في تحميل البيانات: $e');
@@ -72,15 +59,8 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
     }
   }
 
-  Future<void> _loadAdditionalFees() async {
-    // تحميل جميع الرسوم الإضافية من جميع الطلاب
-    _additionalFees = [];
-    for (final student in await _studentService.getAllStudents()) {
-      final studentFees = await _additionalFeeService.getStudentAdditionalFees(
-        student.id!,
-      );
-      _additionalFees.addAll(studentFees);
-    }
+  Future<void> _loadInstallments() async {
+    _installments = await _installmentService.getAllInstallments();
   }
 
   Future<void> _loadStudents() async {
@@ -91,16 +71,8 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
     _schools = await _schoolService.getAllSchools();
   }
 
-  Future<void> _loadFeeTypes() async {
-    final usedTypes = await _additionalFeeService.getUsedFeeTypes();
-    _feeTypes = [
-      ..._predefinedFeeTypes,
-      ...usedTypes.where((type) => !_predefinedFeeTypes.contains(type)),
-    ];
-  }
-
   void _applyFilters() {
-    List<AdditionalFee> filtered = List.from(_additionalFees);
+    List<Installment> filtered = List.from(_installments);
 
     // تصفية حسب المدرسة
     if (_selectedSchoolId != null) {
@@ -109,65 +81,69 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
           .map((s) => s.id!)
           .toList();
       filtered = filtered
-          .where((f) => studentIds.contains(f.studentId))
+          .where((i) => studentIds.contains(i.studentId))
           .toList();
     }
 
     // تصفية حسب الطالب
     if (_selectedStudentId != null) {
       filtered = filtered
-          .where((f) => f.studentId == _selectedStudentId)
+          .where((i) => i.studentId == _selectedStudentId)
           .toList();
     }
 
-    // تصفية حسب نوع الرسم
-    if (_selectedFeeType != null && _selectedFeeType!.isNotEmpty) {
-      filtered = filtered.where((f) => f.feeType == _selectedFeeType).toList();
+    // تصفية حسب نطاق التاريخ
+    if (_startDate != null) {
+      filtered = filtered
+          .where(
+            (i) => i.paymentDate.isAfter(
+              _startDate!.subtract(const Duration(days: 1)),
+            ),
+          )
+          .toList();
     }
-
-    // تصفية حسب حالة الدفع
-    if (_selectedPaymentStatus != null) {
-      if (_selectedPaymentStatus == 'مدفوع') {
-        filtered = filtered.where((f) => f.paid).toList();
-      } else if (_selectedPaymentStatus == 'غير مدفوع') {
-        filtered = filtered.where((f) => !f.paid).toList();
-      }
+    if (_endDate != null) {
+      filtered = filtered
+          .where(
+            (i) =>
+                i.paymentDate.isBefore(_endDate!.add(const Duration(days: 1))),
+          )
+          .toList();
     }
-
-    // البحث النصي
-    if (_searchController.text.isNotEmpty) {
-      final searchText = _searchController.text.toLowerCase();
-      filtered = filtered.where((f) {
-        final studentName = _getStudentName(f.studentId).toLowerCase();
-        final schoolName = _getSchoolName(f.studentId).toLowerCase();
-        final feeType = f.feeType.toLowerCase();
-        final notes = (f.notes ?? '').toLowerCase();
-
-        return studentName.contains(searchText) ||
-            schoolName.contains(searchText) ||
-            feeType.contains(searchText) ||
-            notes.contains(searchText);
+    // تصفية حسب البحث (اسم الطالب أو رقم الوصل)
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((i) {
+        final studentName = _getStudentName(i.studentId);
+        final idString = i.id?.toString() ?? '';
+        return studentName.contains(_searchQuery) ||
+            idString.contains(_searchQuery);
       }).toList();
     }
 
     setState(() {
-      _filteredFees = filtered;
-      _calculateStatistics();
+      _filteredInstallments = filtered;
+      _calculateTotals();
     });
   }
 
-  void _calculateStatistics() {
-    _totalAmount = _filteredFees.fold(0.0, (sum, fee) => sum + fee.amount);
-    _totalCount = _filteredFees.length;
+  void _calculateTotals() {
+    _totalAmount = _filteredInstallments.fold(
+      0.0,
+      (sum, item) => sum + item.amount,
+    );
+    _totalCount = _filteredInstallments.length;
   }
 
   void _clearFilters() {
     setState(() {
       _selectedSchoolId = null;
       _selectedStudentId = null;
-      _selectedFeeType = null;
-      _selectedPaymentStatus = null;
+      _startDate = null;
+      _endDate = null;
+      _startDateController.clear();
+      _endDateController.clear();
       _searchController.clear();
+      _searchQuery = '';
     });
     _applyFilters();
   }
@@ -182,6 +158,81 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
           FilledButton(
             child: const Text('موافق'),
             onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selectDate(bool isStartDate) async {
+    final currentDate = isStartDate ? _startDate : _endDate;
+    final TextEditingController dateController = TextEditingController(
+      text: currentDate != null
+          ? DateFormat('yyyy-MM-dd').format(currentDate)
+          : '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: Text(isStartDate ? 'اختر تاريخ البداية' : 'اختر تاريخ النهاية'),
+        content: SizedBox(
+          width: 300,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormBox(
+                controller: dateController,
+                placeholder: 'YYYY-MM-DD',
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  try {
+                    DateTime.parse(value);
+                    return null;
+                  } catch (e) {
+                    return 'تنسيق التاريخ غير صحيح';
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'أمثلة: 2024-01-15, 2024-12-31',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          Button(
+            child: const Text('إلغاء'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          FilledButton(
+            child: const Text('موافق'),
+            onPressed: () {
+              try {
+                if (dateController.text.isNotEmpty) {
+                  final picked = DateTime.parse(dateController.text);
+                  setState(() {
+                    if (isStartDate) {
+                      _startDate = picked;
+                      _startDateController.text = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(picked);
+                    } else {
+                      _endDate = picked;
+                      _endDateController.text = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(picked);
+                    }
+                  });
+                  _applyFilters();
+                }
+                Navigator.pop(context);
+              } catch (e) {
+                // إظهار رسالة خطأ
+              }
+            },
           ),
         ],
       ),
@@ -216,7 +267,9 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
           padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Column(
             children: [
-              // شريط إدارة الرسوم الإضافية
+              // الرأس والعنوان
+
+              // شريط إدارة الأقساط
               _buildManagementBar(),
               const SizedBox(height: 16),
 
@@ -229,7 +282,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
               const SizedBox(height: 16),
 
               // الجدول الرئيسي
-              Expanded(child: _buildFeesTable()),
+              Expanded(child: _buildInstallmentsTable()),
 
               // معلومات التلخيص
               _buildSummarySection(),
@@ -255,12 +308,12 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'إدارة الرسوم الإضافية',
+                  'إدارة الأقساط',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'عرض وإدارة جميع الرسوم الإضافية في النظام مع إمكانيات البحث والتصفية المتقدمة',
+                  'عرض وإدارة جميع الأقساط المدفوعة في النظام مع إمكانيات البحث والتصفية المتقدمة',
                   style: TextStyle(fontSize: 14, color: Colors.grey[120]),
                 ),
               ],
@@ -275,7 +328,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             child: Column(
               children: [
                 const Text(
-                  'إجمالي الرسوم',
+                  'إجمالي الأقساط',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
@@ -324,7 +377,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
               children: [
                 // قائمة المدارس
                 SizedBox(
-                  width: 180,
+                  width: 200,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -359,7 +412,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                 const SizedBox(width: 8),
                 // قائمة الطلاب
                 SizedBox(
-                  width: 180,
+                  width: 200,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -395,73 +448,51 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // نوع الرسم
+                // تاريخ البداية
                 SizedBox(
                   width: 150,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('نوع الرسم'),
+                      const Text('من تاريخ'),
                       const SizedBox(height: 8),
-                      ComboBox<String?>(
-                        placeholder: const Text('جميع الأنواع'),
-                        value: _selectedFeeType,
-                        items: [
-                          const ComboBoxItem<String?>(
-                            value: null,
-                            child: Text('جميع الأنواع'),
-                          ),
-                          ..._feeTypes.map(
-                            (type) => ComboBoxItem<String?>(
-                              value: type,
-                              child: Text(type),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() => _selectedFeeType = value);
-                          _applyFilters();
-                        },
+                      TextFormBox(
+                        controller: _startDateController,
+                        placeholder: 'اختر تاريخ البداية',
+                        readOnly: true,
+                        onTap: () => _selectDate(true),
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.calendar),
+                          onPressed: () => _selectDate(true),
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                // حالة الدفع
+                // تاريخ النهاية
                 SizedBox(
-                  width: 120,
+                  width: 150,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('حالة الدفع'),
+                      const Text('إلى تاريخ'),
                       const SizedBox(height: 8),
-                      ComboBox<String?>(
-                        placeholder: const Text('الكل'),
-                        value: _selectedPaymentStatus,
-                        items: const [
-                          ComboBoxItem<String?>(
-                            value: null,
-                            child: Text('الكل'),
-                          ),
-                          ComboBoxItem<String?>(
-                            value: 'مدفوع',
-                            child: Text('مدفوع'),
-                          ),
-                          ComboBoxItem<String?>(
-                            value: 'غير مدفوع',
-                            child: Text('غير مدفوع'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() => _selectedPaymentStatus = value);
-                          _applyFilters();
-                        },
+                      TextFormBox(
+                        controller: _endDateController,
+                        placeholder: 'اختر تاريخ النهاية',
+                        readOnly: true,
+                        onTap: () => _selectDate(false),
+                        suffix: IconButton(
+                          icon: const Icon(FluentIcons.calendar),
+                          onPressed: () => _selectDate(false),
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                // حقل البحث
+                // حقل البحث: اسم الطالب أو رقم الوصل
                 SizedBox(
                   width: 200,
                   child: Column(
@@ -471,12 +502,17 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                       const SizedBox(height: 8),
                       TextBox(
                         controller: _searchController,
-                        placeholder: 'اسم الطالب أو نوع الرسم',
+                        placeholder: 'اسم الطالب أو رقم الوصل',
                         suffix: IconButton(
                           icon: const Icon(FluentIcons.search),
                           onPressed: _applyFilters,
                         ),
-                        onChanged: (value) => _applyFilters(),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                          _applyFilters();
+                        },
                       ),
                     ],
                   ),
@@ -533,12 +569,12 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
     );
   }
 
-  Widget _buildFeesTable() {
+  Widget _buildInstallmentsTable() {
     if (_isLoading) {
       return const Center(child: ProgressRing());
     }
 
-    if (_filteredFees.isEmpty) {
+    if (_filteredInstallments.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -546,7 +582,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             Icon(FluentIcons.money, size: 64, color: Colors.grey[120]),
             const SizedBox(height: 16),
             Text(
-              'لا توجد رسوم إضافية',
+              'لا توجد أقساط مدفوعة',
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[120],
@@ -555,7 +591,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'لم يتم العثور على رسوم تطابق معايير البحث المحددة',
+              'لم يتم العثور على أقساط تطابق معايير البحث المحددة',
               style: TextStyle(fontSize: 14, color: Colors.grey[100]),
             ),
           ],
@@ -583,10 +619,21 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             ),
             child: const Row(
               children: [
-                Expanded(
+                // new sequence header
+                const Expanded(
                   flex: 1,
                   child: Text(
                     'تسلسل',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'رقم الوصل',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -616,16 +663,6 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'نوع الرسم',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
                     'المبلغ',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -636,7 +673,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'حالة الدفع',
+                    'تاريخ الدفع',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -646,7 +683,7 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'تاريخ الدفع',
+                    'وقت الدفع',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -670,9 +707,9 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
           // صفوف البيانات
           Expanded(
             child: ListView.builder(
-              itemCount: _filteredFees.length,
+              itemCount: _filteredInstallments.length,
               itemBuilder: (context, index) {
-                final fee = _filteredFees[index];
+                final installment = _filteredInstallments[index];
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -683,55 +720,43 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
                       // تسلسل
                       Expanded(flex: 1, child: Text('${index + 1}')),
                       Expanded(
+                        flex: 2,
+                        child: Text('${installment.id ?? '-'}'),
+                      ),
+                      Expanded(
                         flex: 3,
                         child: Text(
-                          _getStudentName(fee.studentId),
+                          _getStudentName(installment.studentId),
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ),
                       Expanded(
                         flex: 3,
-                        child: Text(_getSchoolName(fee.studentId)),
+                        child: Text(_getSchoolName(installment.studentId)),
                       ),
-                      Expanded(flex: 2, child: Text(fee.feeType)),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          '${NumberFormat('#,###').format(fee.amount)} د.ع',
+                          '${NumberFormat('#,###').format(installment.amount)} د.ع',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: fee.paid
-                                ? Colors.green.dark
-                                : Colors.orange.dark,
+                            color: Colors.green.dark,
                           ),
                         ),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text(
-                          fee.paid ? 'مدفوع' : 'غير مدفوع',
-                          style: TextStyle(
-                            color: fee.paid
-                                ? Colors.green.dark
-                                : Colors.orange.dark,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          DateFormat(
+                            'yyyy-MM-dd',
+                          ).format(installment.paymentDate),
                         ),
                       ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          fee.paymentDate != null
-                              ? DateFormat(
-                                  'yyyy-MM-dd',
-                                ).format(fee.paymentDate!)
-                              : '-',
-                        ),
-                      ),
+                      Expanded(flex: 2, child: Text(installment.paymentTime)),
                       Expanded(
                         flex: 3,
                         child: Text(
-                          fee.notes ?? '-',
+                          installment.notes ?? '-',
                           style: TextStyle(
                             color: Colors.grey[120],
                             fontSize: 13,
@@ -764,12 +789,12 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'ملخص الرسوم المعروضة',
+                'ملخص الأقساط المعروضة',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                'عدد الرسوم: $_totalCount رسم',
+                'عدد الأقساط: $_totalCount قسط',
                 style: TextStyle(fontSize: 14, color: Colors.grey[120]),
               ),
             ],
@@ -810,6 +835,8 @@ class _AdditionalFeesPageState extends State<AdditionalFeesPage> {
 
   @override
   void dispose() {
+    _startDateController.dispose();
+    _endDateController.dispose();
     _searchController.dispose();
     super.dispose();
   }

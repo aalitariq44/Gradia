@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/employee_model.dart';
-import '../models/school_model.dart';
-import '../services/employee_service.dart';
+import '../../models/employee_model.dart';
+import '../../models/school_model.dart';
+import '../../services/employee_service.dart';
 
 class AddEmployeeDialog extends StatefulWidget {
   final List<School> schools;

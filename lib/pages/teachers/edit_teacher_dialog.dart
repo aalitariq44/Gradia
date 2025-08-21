@@ -1,35 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/teacher_model.dart';
-import '../models/school_model.dart';
-import '../services/teacher_service.dart';
+import '../../models/teacher_model.dart';
+import '../../models/school_model.dart';
+import '../../services/teacher_service.dart';
 
-class AddTeacherDialog extends StatefulWidget {
+class EditTeacherDialog extends StatefulWidget {
+  final Teacher teacher;
   final List<School> schools;
-  final VoidCallback onTeacherAdded;
+  final VoidCallback onTeacherUpdated;
 
-  const AddTeacherDialog({
+  const EditTeacherDialog({
     super.key,
+    required this.teacher,
     required this.schools,
-    required this.onTeacherAdded,
+    required this.onTeacherUpdated,
   });
 
   @override
-  State<AddTeacherDialog> createState() => _AddTeacherDialogState();
+  State<EditTeacherDialog> createState() => _EditTeacherDialogState();
 }
 
-class _AddTeacherDialogState extends State<AddTeacherDialog> {
+class _EditTeacherDialogState extends State<EditTeacherDialog> {
   final _formKey = GlobalKey<FormState>();
   final TeacherService _teacherService = TeacherService();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _classHoursController = TextEditingController();
-  final TextEditingController _salaryController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _notesController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _classHoursController;
+  late final TextEditingController _salaryController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _notesController;
 
   int? _selectedSchoolId;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.teacher.name);
+    _classHoursController = TextEditingController(
+      text: widget.teacher.classHours.toString(),
+    );
+    _salaryController = TextEditingController(
+      text: widget.teacher.monthlySalary.toString(),
+    );
+    _phoneController = TextEditingController(text: widget.teacher.phone ?? '');
+    _notesController = TextEditingController(text: widget.teacher.notes ?? '');
+    _selectedSchoolId = widget.teacher.schoolId;
+  }
 
   @override
   void dispose() {
@@ -41,7 +58,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
     super.dispose();
   }
 
-  Future<void> _addTeacher() async {
+  Future<void> _updateTeacher() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedSchoolId == null) {
@@ -52,7 +69,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final teacher = Teacher(
+      final updatedTeacher = widget.teacher.copyWith(
         name: _nameController.text.trim(),
         schoolId: _selectedSchoolId!,
         classHours: int.parse(_classHoursController.text),
@@ -63,13 +80,14 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
         notes: _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
+        updatedAt: DateTime.now(),
       );
 
-      await _teacherService.insertTeacher(teacher);
-      widget.onTeacherAdded();
-      _showSuccessSnackBar('تم إضافة المعلم بنجاح');
+      await _teacherService.updateTeacher(updatedTeacher);
+      widget.onTeacherUpdated();
+      _showSuccessSnackBar('تم تحديث المعلم بنجاح');
     } catch (e) {
-      _showErrorSnackBar('خطأ في إضافة المعلم: ${e.toString()}');
+      _showErrorSnackBar('خطأ في تحديث المعلم: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -110,7 +128,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
                   ),
                 ),
                 child: const Text(
-                  'إضافة معلم جديد',
+                  'تعديل بيانات المعلم',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -371,7 +389,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _addTeacher,
+                    onPressed: _isLoading ? null : _updateTeacher,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade800,
                       foregroundColor: Colors.white,
@@ -391,7 +409,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
                               ),
                             ),
                           )
-                        : const Text('إضافة المعلم'),
+                        : const Text('تحديث المعلم'),
                   ),
                 ],
               ),

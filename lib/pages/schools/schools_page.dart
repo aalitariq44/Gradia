@@ -1,10 +1,10 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:gradia/pages/edit_school_dialog.dart';
+import 'edit_school_dialog.dart';
 
-import '../models/school_model.dart';
-import '../services/school_service.dart';
-import '../generated/app_localizations.dart';
-import '../utils/app_text_styles.dart';
+import '../../models/school_model.dart';
+import '../../services/school_service.dart';
+import '../../generated/app_localizations.dart';
+import '../../utils/app_text_styles.dart';
 
 class SchoolsPage extends StatefulWidget {
   const SchoolsPage({Key? key}) : super(key: key);

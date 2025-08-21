@@ -2,12 +2,12 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart' show TimeOfDay;
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../models/student_model.dart';
-import '../models/school_model.dart';
-import '../models/installment_model.dart';
-import '../services/school_service.dart';
-import '../services/installment_service.dart';
-import 'additional_fees_dialog.dart';
+import '../../models/student_model.dart';
+import '../../models/school_model.dart';
+import '../../models/installment_model.dart';
+import '../../services/school_service.dart';
+import '../../services/installment_service.dart';
+import '../fees/additional_fees_dialog.dart';
 
 class StudentDetailsPage extends StatefulWidget {
   final Student student;

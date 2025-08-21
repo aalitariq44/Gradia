@@ -1,8 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../models/student_model.dart';
-import '../models/additional_fee_model.dart';
+import '../../models/student_model.dart';
+import '../../models/additional_fee_model.dart';
 
 class PrintAdditionalFeesDialog extends StatefulWidget {
   final Student student;

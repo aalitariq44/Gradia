@@ -1,10 +1,10 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/widgets.dart' as flutter_widgets show TextDirection;
 import 'package:intl/intl.dart';
-import '../services/external_income_service.dart';
-import '../services/school_service.dart';
-import '../models/external_income_model.dart';
-import '../models/school_model.dart';
+import '../../services/external_income_service.dart';
+import '../../services/school_service.dart';
+import '../../models/external_income_model.dart';
+import '../../models/school_model.dart';
 import 'add_external_income_dialog.dart';
 
 class ExternalIncomePage extends StatefulWidget {

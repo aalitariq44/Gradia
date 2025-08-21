@@ -2,15 +2,15 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart' hide Colors;
 import 'generated/app_localizations.dart';
-import 'pages/schools_page.dart';
-import 'pages/students_page.dart';
-import 'pages/Installments_page.dart';
-import 'pages/additional_fees_page.dart';
-import 'pages/teachers_page.dart';
-import 'pages/employees_page.dart';
-import 'pages/external_income_page.dart';
+import 'pages/schools/schools_page.dart';
+import 'pages/students/students_page.dart';
+import 'pages/fees/installments_page.dart';
+import 'pages/fees/additional_fees_page.dart';
+import 'pages/teachers/teachers_page.dart';
+import 'pages/employees/employees_page.dart';
+import 'pages/finance/external_income_page.dart';
 import 'pages/expenses/expenses_page.dart';
-import 'pages/font_demo_page.dart';
+import 'pages/demo/font_demo_page.dart';
 import 'utils/font_config.dart';
 
 void main() {
